@@ -13,6 +13,8 @@ import {
   moveElement,
   noop,
 } from '../../helpers/utils'
+
+import { deepEqual } from 'fast-equals'
 import { styled } from '@linaria/react'
 import clsx from 'clsx'
 
@@ -41,8 +43,10 @@ export type Props = {
   verticalCompact?: boolean
   compactType?: CompactType
 
+  onLayoutChange: (layout: Layout) => void
   onDragStart?: EventCallback
   onDrag?: EventCallback
+  onDragStop?: EventCallback
 }
 
 function GridLayout(props: Props) {
@@ -66,13 +70,15 @@ function GridLayout(props: Props) {
     preventCollision = true,
     verticalCompact = true,
     compactType = 'vertical',
+    onLayoutChange = noop,
     onDragStart: onItemDragStart = noop,
-    onDrag: onItemDrag = noop
+    onDrag: onItemDrag = noop,
+    onDragStop: onItemDragStop = noop,
   } = props
 
   const [layout, setLayout] = useState(initialLayout)
   const [oldDragItem, setOldDragItem] = useState<LayoutItem | null>(null)
-  const [, setOldLayout] = useState<Layout | null>(null)
+  const [oldLayout, setOldLayout] = useState<Layout | null>(null)
   const [activeDrag, setActiveDrag] = useState<LayoutItem | null>(null)
 
   const mergedClassName = useMemo(
@@ -109,7 +115,12 @@ function GridLayout(props: Props) {
   )
 
   const onDrag = useCallback(
-    function (i: string, x: number, y: number, { e, node }: GridDragEvent): void {
+    function (
+      i: string,
+      x: number,
+      y: number,
+      { e, node }: GridDragEvent
+    ): void {
       const l = getLayoutItem(layout, i)
       if (!l) return
 
@@ -140,7 +151,7 @@ function GridLayout(props: Props) {
         allowOverlap
       )
 
-      onItemDrag(e, newLayout, oldDragItem, l, placeholder, node);
+      onItemDrag(e, newLayout, oldDragItem, l, placeholder, node)
 
       setLayout(
         allowOverlap
@@ -158,7 +169,91 @@ function GridLayout(props: Props) {
 
       setActiveDrag(placeholder)
     },
-    [allowOverlap, cols, compactType, layout, preventCollision, verticalCompact]
+    [
+      allowOverlap,
+      cols,
+      compactType,
+      layout,
+      oldDragItem,
+      onItemDrag,
+      preventCollision,
+      verticalCompact,
+    ]
+  )
+
+  const onLayoutMaybeChanged = useCallback(
+    function (newLayout: Layout, oldLayout: Layout | null) {
+      if (!oldLayout) oldLayout = layout
+
+      if (!deepEqual(oldLayout, newLayout)) {
+        onLayoutChange(newLayout)
+      }
+    },
+    [layout, onLayoutChange]
+  )
+
+  const onDragStop = useCallback(
+    function (
+      i: string,
+      x: number,
+      y: number,
+      { e, node }: GridDragEvent
+    ): void {
+      if (!activeDrag) return
+
+      const l = getLayoutItem(layout, i)
+      if (!l) return
+
+      const isUserAction = true
+      let newLayout = moveElement(
+        layout,
+        l,
+        x,
+        y,
+        isUserAction,
+        preventCollision,
+        compactTypeFn({
+          verticalCompact,
+          compactType,
+        }),
+        cols,
+        allowOverlap
+      )
+
+      newLayout = allowOverlap
+        ? layout
+        : compact(
+            layout,
+            compactTypeFn({
+              verticalCompact,
+              compactType,
+            }),
+            cols,
+            undefined
+          )
+
+      onItemDragStop(e, newLayout, oldDragItem, l, null, node)
+
+      setActiveDrag(null)
+      setLayout(newLayout)
+      setOldDragItem(null)
+      setOldLayout(null)
+
+      onLayoutMaybeChanged(newLayout, oldLayout)
+    },
+    [
+      activeDrag,
+      allowOverlap,
+      cols,
+      compactType,
+      layout,
+      oldDragItem,
+      oldLayout,
+      onItemDragStop,
+      onLayoutMaybeChanged,
+      preventCollision,
+      verticalCompact,
+    ]
   )
 
   function placeholder() {
@@ -225,6 +320,7 @@ function GridLayout(props: Props) {
           isBounded={isBounded}
           onDragStart={onDragStart}
           onDrag={onDrag}
+          onDragStop={onDragStop}
         >
           {child}
         </GridItem>
@@ -240,6 +336,7 @@ function GridLayout(props: Props) {
       margin,
       onDrag,
       onDragStart,
+      onDragStop,
       rows,
       transformScale,
       useCSSTransforms,

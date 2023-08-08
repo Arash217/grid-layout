@@ -68,6 +68,7 @@ export type Props = {
 
   onDragStart?: GridItemCallback<GridDragEvent>
   onDrag?: GridItemCallback<GridDragEvent>
+  onDragStop?: GridItemCallback<GridDragEvent>
 }
 
 export function GridItem(props: Props) {
@@ -260,6 +261,41 @@ export function GridItem(props: Props) {
     })
   }
 
+  function onDragStop(e: Event, { node }: ReactDraggableCallbackData) {
+    const { onDragStop } = props
+    if (!onDragStop) return
+
+    if (!dragging) {
+      throw new Error('onDragEnd called before onDragStart.')
+    }
+
+    const { w, h, i } = props
+    const { left, top } = dragging
+    const newPosition: PartialPosition = { top, left }
+    setDragging(null)
+
+    const { x, y } = calcXY(
+      {
+        cols,
+        rows,
+        containerPadding,
+        containerWidth,
+        containerHeight,
+        margin,
+      },
+      top,
+      left,
+      w,
+      h
+    )
+
+    return onDragStop(i, x, y, {
+      e,
+      node,
+      newPosition,
+    })
+  }
+
   function mixinDraggable(
     child: ReactElement,
     isDraggable: boolean
@@ -271,7 +307,7 @@ export function GridItem(props: Props) {
         disabled={!isDraggable}
         onStart={onDragStart}
         onDrag={onDrag}
-        // onStop={onDragStop}
+        onStop={onDragStop}
         // handle={props.handle}
         // cancel={
         //   '.react-resizable-handle' +
