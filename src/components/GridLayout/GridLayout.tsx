@@ -4,6 +4,7 @@ import {
   CompactType,
   EventCallback,
   GridDragEvent,
+  GridResizeEvent,
   Layout,
   LayoutItem,
   cloneLayoutItem,
@@ -12,11 +13,14 @@ import {
   getLayoutItem,
   moveElement,
   noop,
+  withLayoutItem,
+  getAllCollisions,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
 import { styled } from '@linaria/react'
 import clsx from 'clsx'
+import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
 
 const layoutClassName = 'react-grid-layout'
 
@@ -36,17 +40,24 @@ export type Props = {
   autoSize?: boolean
   showGridLines?: boolean
   isDraggable?: boolean
+  isResizable?: boolean
   isBounded?: boolean
   transformScale?: number
   allowOverlap?: boolean
   preventCollision?: boolean
   verticalCompact?: boolean
   compactType?: CompactType
+  resizeHandles?: ResizeHandleAxis[]
+  resizeHandle?: ResizeHandle
 
-  onLayoutChange: (layout: Layout) => void
+  onLayoutChange?: (layout: Layout) => void
   onDragStart?: EventCallback
   onDrag?: EventCallback
   onDragStop?: EventCallback
+
+  onResize?: EventCallback
+  onResizeStart?: EventCallback
+  onResizeStop?: EventCallback
 }
 
 function GridLayout(props: Props) {
@@ -64,6 +75,7 @@ function GridLayout(props: Props) {
     useCSSTransforms = true,
     showGridLines = false,
     isDraggable = false,
+    isResizable = false,
     isBounded = false,
     transformScale = 1,
     allowOverlap = false,
@@ -74,10 +86,16 @@ function GridLayout(props: Props) {
     onDragStart: onItemDragStart = noop,
     onDrag: onItemDrag = noop,
     onDragStop: onItemDragStop = noop,
+    onResizeStart: onItemResizeStart = noop,
+    onResize: onItemResize = noop,
+    onDragStop: onItemResizeStop = noop,
+    resizeHandles = ['se'],
+    resizeHandle,
   } = props
 
   const [layout, setLayout] = useState(initialLayout)
   const [oldDragItem, setOldDragItem] = useState<LayoutItem | null>(null)
+  const [oldResizeItem, setOldResizeItem] = useState<LayoutItem | null>(null)
   const [oldLayout, setOldLayout] = useState<Layout | null>(null)
   const [activeDrag, setActiveDrag] = useState<LayoutItem | null>(null)
 
@@ -256,6 +274,145 @@ function GridLayout(props: Props) {
     ]
   )
 
+  const onResizeStart = useCallback(
+    function (
+      i: string,
+      w: number,
+      h: number,
+      { e, node }: GridResizeEvent
+    ): void {
+      const l = getLayoutItem(layout, i)
+      if (!l) return
+
+      setOldResizeItem(cloneLayoutItem(l))
+      setOldLayout(layout)
+
+      onItemResizeStart(e, layout, l, l, null, node)
+    },
+    [layout, onItemResizeStart]
+  )
+
+  const onResize = useCallback(
+    function (
+      i: string,
+      w: number,
+      h: number,
+      { e, node }: GridResizeEvent
+    ): void {
+      const [newLayout, l] = withLayoutItem(layout, i, (l) => {
+        // Something like quad tree should be used
+        // to find collisions faster
+        let hasCollisions
+        if (preventCollision && !allowOverlap) {
+          const collisions = getAllCollisions(layout, { ...l, w, h }).filter(
+            (layoutItem) => layoutItem.i !== l.i
+          )
+          hasCollisions = collisions.length > 0
+
+          // If we're colliding, we need adjust the placeholder.
+          if (hasCollisions) {
+            // adjust w && h to maximum allowed space
+            let leastX = Infinity,
+              leastY = Infinity
+            collisions.forEach((layoutItem) => {
+              if (layoutItem.x > l.x) leastX = Math.min(leastX, layoutItem.x)
+              if (layoutItem.y > l.y) leastY = Math.min(leastY, layoutItem.y)
+            })
+
+            if (Number.isFinite(leastX)) l.w = leastX - l.x
+            if (Number.isFinite(leastY)) l.h = leastY - l.y
+          }
+        }
+
+        if (!hasCollisions) {
+          // Set new width and height.
+          l.w = w
+          l.h = h
+        }
+
+        return l
+      })
+
+      // Shouldn't ever happen, but typechecking makes it necessary
+      if (!l) return
+
+      // Create placeholder element (display only)
+      const placeholder = {
+        w: l.w,
+        h: l.h,
+        x: l.x,
+        y: l.y,
+        static: true,
+        i: i,
+      }
+
+      onItemResize(e, newLayout, oldResizeItem, l, placeholder, node)
+
+      setLayout(
+        allowOverlap
+          ? newLayout
+          : compact(
+              newLayout,
+              compactTypeFn({ verticalCompact, compactType }),
+              cols,
+              undefined
+            )
+      )
+
+      setActiveDrag(placeholder)
+    },
+    [
+      allowOverlap,
+      cols,
+      compactType,
+      layout,
+      oldResizeItem,
+      onItemResize,
+      preventCollision,
+      verticalCompact,
+    ]
+  )
+
+  const onResizeStop = useCallback(
+    function (
+      i: string,
+      w: number,
+      h: number,
+      { e, node }: GridResizeEvent
+    ): void {
+      const l = getLayoutItem(layout, i)
+
+      const newLayout = allowOverlap
+        ? layout
+        : compact(
+            layout,
+            compactTypeFn({ compactType, verticalCompact }),
+            cols,
+            undefined
+          )
+
+      onItemResizeStop(e, newLayout, oldResizeItem, l, null, node)
+
+      setActiveDrag(null)
+      setLayout(newLayout)
+      setOldResizeItem(null)
+      setOldLayout(null)
+
+      onLayoutMaybeChanged(newLayout, oldLayout)
+    },
+    [
+      allowOverlap,
+      cols,
+      compactType,
+      layout,
+      oldLayout,
+      oldResizeItem,
+      onItemResizeStop,
+      onLayoutMaybeChanged,
+      verticalCompact,
+    ]
+  )
+
   function placeholder() {
     if (!activeDrag) return null
 
@@ -280,6 +437,7 @@ function GridLayout(props: Props) {
         margin={margin}
         containerPadding={containerPadding || margin}
         isDraggable={false}
+        isResizable={false}
         isBounded={false}
         useCSSTransforms={useCSSTransforms}
         transformScale={transformScale}
@@ -295,6 +453,20 @@ function GridLayout(props: Props) {
 
       const l = getLayoutItem(layout, String(child.key))
       if (!l) return null
+
+      const draggable =
+        typeof l.isDraggable === 'boolean'
+          ? l.isDraggable
+          : !l.static && isDraggable
+
+      const resizable =
+        typeof l.isResizable === 'boolean'
+          ? l.isResizable
+          : !l.static && isResizable
+
+      const resizeHandlesOptions = l.resizeHandles || resizeHandles
+
+      const bounded = draggable && isBounded && l.isBounded !== false
 
       return (
         <GridItem
@@ -316,11 +488,17 @@ function GridLayout(props: Props) {
           maxH={l.maxH}
           maxW={l.maxW}
           static={l.static}
-          isDraggable={isDraggable}
-          isBounded={isBounded}
+          isDraggable={draggable}
+          isResizable={resizable}
+          isBounded={bounded}
           onDragStart={onDragStart}
           onDrag={onDrag}
           onDragStop={onDragStop}
+          onResizeStart={onResizeStart}
+          onResize={onResize}
+          onResizeStop={onResizeStop}
+          resizeHandles={resizeHandlesOptions}
+          resizeHandle={resizeHandle}
         >
           {child}
         </GridItem>
@@ -332,11 +510,17 @@ function GridLayout(props: Props) {
       height,
       isBounded,
       isDraggable,
+      isResizable,
       layout,
       margin,
       onDrag,
       onDragStart,
       onDragStop,
+      onResize,
+      onResizeStart,
+      onResizeStop,
+      resizeHandle,
+      resizeHandles,
       rows,
       transformScale,
       useCSSTransforms,

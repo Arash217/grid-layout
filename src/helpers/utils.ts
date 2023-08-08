@@ -93,34 +93,34 @@ export function sortLayoutItems(
 }
 
 export function getStatics(layout: Layout): Array<LayoutItem> {
-  return layout.filter(l => l.static);
+  return layout.filter((l) => l.static)
 }
 
-const heightWidth = { x: "w", y: "h" };
+const heightWidth = { x: 'w', y: 'h' }
 
 function resolveCompactionCollision(
   layout: Layout,
   item: LayoutItem,
   moveToCoord: number,
-  axis: "x" | "y"
+  axis: 'x' | 'y'
 ) {
-  const sizeProp = heightWidth[axis];
-  item[axis] += 1;
+  const sizeProp = heightWidth[axis]
+  item[axis] += 1
   const itemIndex = layout
-    .map(layoutItem => {
-      return layoutItem.i;
+    .map((layoutItem) => {
+      return layoutItem.i
     })
-    .indexOf(item.i);
+    .indexOf(item.i)
 
   // Go through each item we collide with.
   for (let i = itemIndex + 1; i < layout.length; i++) {
-    const otherItem = layout[i];
+    const otherItem = layout[i]
     // Ignore static items
-    if (otherItem.static) continue;
+    if (otherItem.static) continue
 
     // Optimization: we can break early if we know we're past this el
     // We can do this b/c it's a sorted layout
-    if (otherItem.y > item.y + item.h) break;
+    if (otherItem.y > item.y + item.h) break
 
     if (collides(item, otherItem)) {
       resolveCompactionCollision(
@@ -130,11 +130,11 @@ function resolveCompactionCollision(
         //@ts-ignore
         moveToCoord + item[sizeProp],
         axis
-      );
+      )
     }
   }
 
-  item[axis] = moveToCoord;
+  item[axis] = moveToCoord
 }
 
 export function compactItem(
@@ -145,52 +145,52 @@ export function compactItem(
   fullLayout: Layout,
   allowOverlap: boolean | undefined
 ): LayoutItem {
-  const compactV = compactType === "vertical";
-  const compactH = compactType === "horizontal";
+  const compactV = compactType === 'vertical'
+  const compactH = compactType === 'horizontal'
   if (compactV) {
     // Bottom 'y' possible is the bottom of the layout.
     // This allows you to do nice stuff like specify {y: Infinity}
     // This is here because the layout must be sorted in order to get the correct bottom `y`.
-    l.y = Math.min(bottom(compareWith), l.y);
+    l.y = Math.min(bottom(compareWith), l.y)
     // Move the element up as far as it can go without colliding.
     while (l.y > 0 && !getFirstCollision(compareWith, l)) {
-      l.y--;
+      l.y--
     }
   } else if (compactH) {
     // Move the element left as far as it can go without colliding.
     while (l.x > 0 && !getFirstCollision(compareWith, l)) {
-      l.x--;
+      l.x--
     }
   }
 
   // Move it down, and keep moving it down if it's colliding.
-  let collides;
+  let collides
   // Checking the compactType null value to avoid breaking the layout when overlapping is allowed.
   while (
     (collides = getFirstCollision(compareWith, l)) &&
     !(compactType === null && allowOverlap)
   ) {
     if (compactH) {
-      resolveCompactionCollision(fullLayout, l, collides.x + collides.w, "x");
+      resolveCompactionCollision(fullLayout, l, collides.x + collides.w, 'x')
     } else {
-      resolveCompactionCollision(fullLayout, l, collides.y + collides.h, "y");
+      resolveCompactionCollision(fullLayout, l, collides.y + collides.h, 'y')
     }
     // Since we can't grow without bounds horizontally, if we've overflown, let's move it down and try again.
     if (compactH && l.x + l.w > cols) {
-      l.x = cols - l.w;
-      l.y++;
+      l.x = cols - l.w
+      l.y++
       // ALso move element as left as we can
       while (l.x > 0 && !getFirstCollision(compareWith, l)) {
-        l.x--;
+        l.x--
       }
     }
   }
 
   // Ensure that there are no negative positions
-  l.y = Math.max(l.y, 0);
-  l.x = Math.max(l.x, 0);
+  l.y = Math.max(l.y, 0)
+  l.x = Math.max(l.x, 0)
 
-  return l;
+  return l
 }
 
 export function compact(
@@ -200,32 +200,32 @@ export function compact(
   allowOverlap: boolean | undefined
 ): Layout {
   // Statics go in the compareWith array right away so items flow around them.
-  const compareWith = getStatics(layout);
+  const compareWith = getStatics(layout)
   // We go through the items by row and column.
-  const sorted = sortLayoutItems(layout, compactType);
+  const sorted = sortLayoutItems(layout, compactType)
   // Holding for new items.
-  const out = Array(layout.length);
+  const out = Array(layout.length)
 
   for (let i = 0, len = sorted.length; i < len; i++) {
-    let l = cloneLayoutItem(sorted[i]);
+    let l = cloneLayoutItem(sorted[i])
 
     // Don't move static elements
     if (!l.static) {
-      l = compactItem(compareWith, l, compactType, cols, sorted, allowOverlap);
+      l = compactItem(compareWith, l, compactType, cols, sorted, allowOverlap)
 
       // Add to comparison array. We only collide with items before this one.
       // Statics are already in this array.
-      compareWith.push(l);
+      compareWith.push(l)
     }
 
     // Add to output array to make sure they still come out in the right order.
-    out[layout.indexOf(sorted[i])] = l;
+    out[layout.indexOf(sorted[i])] = l
 
     // Clear moved flag, if it exists.
-    l.moved = false;
+    l.moved = false
   }
 
-  return out;
+  return out
 }
 
 export function collides(l1: LayoutItem, l2: LayoutItem): boolean {
@@ -428,6 +428,34 @@ export function bottom(layout: Layout): number {
   return max
 }
 
+export function modifyLayout(layout: Layout, layoutItem: LayoutItem): Layout {
+  const newLayout = Array(layout.length);
+
+  for (let i = 0, len = layout.length; i < len; i++) {
+    if (layoutItem.i === layout[i].i) {
+      newLayout[i] = layoutItem;
+    } else {
+      newLayout[i] = layout[i];
+    }
+  }
+  
+  return newLayout;
+}
+
+export function withLayoutItem(
+  layout: Layout,
+  itemKey: string,
+  cb: (layoutItem: LayoutItem) => LayoutItem
+): [Layout, LayoutItem | null] {
+  let item = getLayoutItem(layout, itemKey)
+  if (!item) return [layout, null]
+
+  item = cb(cloneLayoutItem(item))
+  layout = modifyLayout(layout, item)
+
+  return [layout, item]
+}
+
 export function cloneLayoutItem(layoutItem: LayoutItem): LayoutItem {
   return {
     w: layoutItem.w,
@@ -449,9 +477,10 @@ export function cloneLayoutItem(layoutItem: LayoutItem): LayoutItem {
   }
 }
 
-export function compactType(
-  props: { verticalCompact: boolean; compactType: CompactType }
-): CompactType {
+export function compactType(props: {
+  verticalCompact: boolean
+  compactType: CompactType
+}): CompactType {
   const { verticalCompact, compactType } = props || {}
   return verticalCompact === false ? null : compactType
 }

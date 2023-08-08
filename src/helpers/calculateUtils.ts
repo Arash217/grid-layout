@@ -99,7 +99,28 @@ export function calcXY(
 
   x = clamp(x, 0, cols - w)
   y = clamp(y, 0, rows - h)
+  
   return { x, y }
+}
+
+export function calcWH(
+  positionParams: PositionParams,
+  width: number,
+  height: number,
+  x: number,
+  y: number
+): { w: number, h: number } {
+  const { margin, rows, cols } = positionParams;
+  const colWidth = calcGridColWidth(positionParams);
+  const rowHeight = calcGridRowHeight(positionParams)
+
+  let w = Math.round((width + margin[0]) / (colWidth + margin[0]));
+  let h = Math.round((height + margin[1]) / (rowHeight + margin[1]));
+
+  // Capping
+  w = clamp(w, 0, cols - x);
+  h = clamp(h, 0, rows - y);
+  return { w, h };
 }
 
 export function clamp(

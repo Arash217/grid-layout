@@ -8,11 +8,14 @@ import React, {
 import clsx from 'clsx'
 
 import { DraggableCore } from 'react-draggable'
+import 'react-resizable/css/styles.css'
+import { Resizable } from 'react-resizable'
 
 import {
   calcGridColWidth,
   calcGridItemPosition,
   calcGridItemWHPx,
+  calcWH,
   calcXY,
   clamp,
 } from '../../helpers/calculateUtils'
@@ -33,6 +36,19 @@ type GridItemCallback<Data extends GridDragEvent | GridResizeEvent> = (
   h: number,
   data: Data
 ) => void
+
+export type ReactRef<T extends HTMLElement> = {
+  readonly current: T | null
+}
+
+export type ResizeHandleAxis = 's' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'
+
+export type ResizeHandle =
+  | ReactElement
+  | ((
+      resizeHandleAxis: ResizeHandleAxis,
+      ref: ReactRef<HTMLElement>
+    ) => ReactElement)
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -62,13 +78,21 @@ export type Props = {
   minH?: number
   maxH?: number
 
+  resizeHandles?: ResizeHandleAxis[]
+  resizeHandle?: ResizeHandle
+
   static?: boolean
   isDraggable: boolean
+  isResizable: boolean
   isBounded: boolean
 
   onDragStart?: GridItemCallback<GridDragEvent>
   onDrag?: GridItemCallback<GridDragEvent>
   onDragStop?: GridItemCallback<GridDragEvent>
+
+  onResize?: GridItemCallback<GridResizeEvent>
+  onResizeStart?: GridItemCallback<GridResizeEvent>
+  onResizeStop?: GridItemCallback<GridResizeEvent>
 }
 
 export function GridItem(props: Props) {
@@ -76,10 +100,15 @@ export function GridItem(props: Props) {
     children,
     className,
     style,
+    i,
     x,
     y,
     w,
     h,
+    minH = 1,
+    minW = 1,
+    maxH = Infinity,
+    maxW = Infinity,
     cols,
     rows,
     containerPadding,
@@ -89,10 +118,16 @@ export function GridItem(props: Props) {
     usePercentages,
     useCSSTransforms,
     isDraggable,
+    isResizable,
     transformScale,
+    resizeHandles,
+    resizeHandle,
   } = props
 
-  const [resizing] = useState<{ width: number; height: number } | null>(null)
+  const [resizing, setResizing] = useState<{
+    width: number
+    height: number
+  } | null>(null)
   const [dragging, setDragging] = useState<{
     top: number
     left: number
@@ -160,166 +195,340 @@ export function GridItem(props: Props) {
     [containerWidth, useCSSTransforms, usePercentages]
   )
 
-  function onDragStart(e: Event, { node }: ReactDraggableCallbackData): void {
-    const { onDragStart, transformScale } = props
-    if (!onDragStart) return
+  const onDragStart = useCallback(
+    function (e: Event, { node }: ReactDraggableCallbackData): void {
+      const { onDragStart, transformScale } = props
+      if (!onDragStart) return
 
-    const newPosition: PartialPosition = { top: 0, left: 0 }
+      const newPosition: PartialPosition = { top: 0, left: 0 }
 
-    // TODO: this wont work on nested parents
-    const { offsetParent } = node
-    if (!offsetParent) return
+      // TODO: this wont work on nested parents
+      const { offsetParent } = node
+      if (!offsetParent) return
 
-    const parentRect = offsetParent.getBoundingClientRect()
-    const clientRect = node.getBoundingClientRect()
+      const parentRect = offsetParent.getBoundingClientRect()
+      const clientRect = node.getBoundingClientRect()
 
-    const cLeft = clientRect.left / transformScale
-    const pLeft = parentRect.left / transformScale
-    const cTop = clientRect.top / transformScale
-    const pTop = parentRect.top / transformScale
+      const cLeft = clientRect.left / transformScale
+      const pLeft = parentRect.left / transformScale
+      const cTop = clientRect.top / transformScale
+      const pTop = parentRect.top / transformScale
 
-    newPosition.left = cLeft - pLeft + offsetParent.scrollLeft
-    newPosition.top = cTop - pTop + offsetParent.scrollTop
+      newPosition.left = cLeft - pLeft + offsetParent.scrollLeft
+      newPosition.top = cTop - pTop + offsetParent.scrollTop
 
-    setDragging({ ...newPosition })
+      setDragging({ ...newPosition })
 
-    // Call callback with this data
-    const { x, y } = calcXY(
-      {
+      // Call callback with this data
+      const { x, y } = calcXY(
+        {
+          cols,
+          rows,
+          containerPadding,
+          containerWidth,
+          containerHeight,
+          margin,
+        },
+        newPosition.top,
+        newPosition.left,
+        props.w,
+        props.h
+      )
+
+      return onDragStart(props.i, x, y, {
+        e,
+        node,
+        newPosition,
+      })
+    },
+    [cols, containerHeight, containerPadding, containerWidth, margin, props, resizing, rows]
+  )
+
+  const onDrag = useCallback(
+    function (
+      e: Event,
+      { node, deltaX, deltaY }: ReactDraggableCallbackData
+    ): void {
+      const { onDrag } = props
+      if (!onDrag) return
+
+      if (!dragging) {
+        throw new Error('onDrag called before onDragStart.')
+      }
+
+      let top = dragging.top + deltaY
+      let left = dragging.left + deltaX
+
+      const { isBounded, i, w, h, containerWidth } = props
+      const positionParams = {
         cols,
         rows,
         containerPadding,
         containerWidth,
         containerHeight,
         margin,
-      },
-      newPosition.top,
-      newPosition.left,
-      props.w,
-      props.h
-    )
+      }
 
-    return onDragStart(props.i, x, y, {
-      e,
-      node,
-      newPosition,
-    })
-  }
+      // Boundary calculations; keeps items within the grid
+      if (isBounded) {
+        const { offsetParent } = node
 
-  function onDrag(
-    e: Event,
-    { node, deltaX, deltaY }: ReactDraggableCallbackData
-  ): void {
-    const { onDrag } = props
-    if (!onDrag) return
+        if (offsetParent) {
+          const { margin } = props
+          const rowHeight = containerHeight / rows
 
-    if (!dragging) {
-      throw new Error('onDrag called before onDragStart.')
-    }
+          const bottomBoundary =
+            offsetParent.clientHeight -
+            calcGridItemWHPx(h, rowHeight, margin[1])
+          top = clamp(top, 0, bottomBoundary)
 
-    let top = dragging.top + deltaY
-    let left = dragging.left + deltaX
+          const colWidth = calcGridColWidth(positionParams)
+          const rightBoundary =
+            containerWidth - calcGridItemWHPx(w, colWidth, margin[0])
+          left = clamp(left, 0, rightBoundary)
+        }
+      }
 
-    const { isBounded, i, w, h, containerWidth } = props
-    const positionParams = {
+      const newPosition: PartialPosition = { top, left }
+      setDragging({ ...newPosition })
+
+      // Call callback with this data
+      const { x, y } = calcXY(positionParams, top, left, w, h)
+      return onDrag(i, x, y, {
+        e,
+        node,
+        newPosition,
+      })
+    },
+    [cols, containerHeight, containerPadding, dragging, margin, props, rows]
+  )
+
+  const onDragStop = useCallback(
+    function (e: Event, { node }: ReactDraggableCallbackData) {
+      const { onDragStop } = props
+      if (!onDragStop) return
+
+      if (!dragging) {
+        throw new Error('onDragEnd called before onDragStart.')
+      }
+
+      const { w, h, i } = props
+      const { left, top } = dragging
+      const newPosition: PartialPosition = { top, left }
+      setDragging(null)
+
+      const { x, y } = calcXY(
+        {
+          cols,
+          rows,
+          containerPadding,
+          containerWidth,
+          containerHeight,
+          margin,
+        },
+        top,
+        left,
+        w,
+        h
+      )
+
+      return onDragStop(i, x, y, {
+        e,
+        node,
+        newPosition,
+      })
+    },
+    [
       cols,
-      rows,
+      containerHeight,
       containerPadding,
       containerWidth,
-      containerHeight,
+      dragging,
       margin,
-    }
+      props,
+      rows,
+    ]
+  )
 
-    // Boundary calculations; keeps items within the grid
-    if (isBounded) {
-      const { offsetParent } = node
+  const onResizeHandler = useCallback(
+    function (
+      e: Event,
+      { node, size }: { node: HTMLElement; size: Position },
+      handlerName: string
+    ): void {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      const handler = props[handlerName]
+      if (!handler) return
 
-      if (offsetParent) {
-        const { margin } = props
-        const rowHeight = containerHeight / rows
+      // Get new XY
+      let { w, h } = calcWH(
+        {
+          cols,
+          rows,
+          containerPadding,
+          containerWidth,
+          containerHeight,
+          margin,
+        },
+        size.width,
+        size.height,
+        x,
+        y
+      )
 
-        const bottomBoundary =
-          offsetParent.clientHeight - calcGridItemWHPx(h, rowHeight, margin[1])
-        top = clamp(top, 0, bottomBoundary)
+      const newMinW = Math.max(minW, 1)
+      const newMaxW = Math.min(maxW, cols - x)
 
-        const colWidth = calcGridColWidth(positionParams)
-        const rightBoundary =
-          containerWidth - calcGridItemWHPx(w, colWidth, margin[0])
-        left = clamp(left, 0, rightBoundary)
-      }
-    }
+      // Min/max capping
+      w = clamp(w, newMinW, newMaxW)
+      h = clamp(h, minH, maxH)
 
-    const newPosition: PartialPosition = { top, left }
-    setDragging({ ...newPosition })
+      setResizing(handlerName === 'onResizeStop' ? null : size)
 
-    // Call callback with this data
-    const { x, y } = calcXY(positionParams, top, left, w, h)
-    return onDrag(i, x, y, {
-      e,
-      node,
-      newPosition,
-    })
-  }
+      handler(i, w, h, { e, node, size })
+    },
+    [
+      cols,
+      containerHeight,
+      containerPadding,
+      containerWidth,
+      i,
+      margin,
+      maxH,
+      maxW,
+      minH,
+      minW,
+      props,
+      rows,
+      x,
+      y,
+    ]
+  )
 
-  function onDragStop(e: Event, { node }: ReactDraggableCallbackData) {
-    const { onDragStop } = props
-    if (!onDragStop) return
+  const onResizeStart = useCallback(
+    function (
+      e: Event,
+      callbackData: { node: HTMLElement; size: Position }
+    ): void {
+      e.stopPropagation()
+      onResizeHandler(e, callbackData, 'onResizeStart')
+    },
+    [onResizeHandler]
+  )
 
-    if (!dragging) {
-      throw new Error('onDragEnd called before onDragStart.')
-    }
+  const onResize = useCallback(
+    function (e: Event, callbackData: { node: HTMLElement; size: Position }) {
+      onResizeHandler(e, callbackData, 'onResize')
+    },
+    [onResizeHandler]
+  )
 
-    const { w, h, i } = props
-    const { left, top } = dragging
-    const newPosition: PartialPosition = { top, left }
-    setDragging(null)
+  const onResizeStop = useCallback(
+    function (e: Event, callbackData: { node: HTMLElement; size: Position }) {
+      onResizeHandler(e, callbackData, 'onResizeStop')
+    },
+    [onResizeHandler]
+  )
 
-    const { x, y } = calcXY(
-      {
+  const mixinDraggable = useCallback(
+    function (child: ReactElement, isDraggable: boolean): ReactElement {
+      return (
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        <DraggableCore
+          disabled={!isDraggable}
+          onStart={onDragStart}
+          onDrag={onDrag}
+          onStop={onDragStop}
+          // handle={props.handle}
+          // cancel={
+          //   '.react-resizable-handle' +
+          //   (this.props.cancel ? ',' + this.props.cancel : '')
+          // }
+          scale={transformScale}
+          nodeRef={elementRef}
+        >
+          {child}
+        </DraggableCore>
+      )
+    },
+    [onDrag, onDragStart, onDragStop, transformScale]
+  )
+
+  const mixinResizable = useCallback(
+    function (child: ReactElement, position: Position, isResizable: boolean) {
+      const positionParams = {
         cols,
         rows,
         containerPadding,
         containerWidth,
         containerHeight,
         margin,
-      },
-      top,
-      left,
-      w,
-      h
-    )
+      }
 
-    return onDragStop(i, x, y, {
-      e,
-      node,
-      newPosition,
-    })
-  }
+      // This is the max possible width - doesn't go to infinity because of the width of the window
+      const maxWidth = calcGridItemPosition(
+        positionParams,
+        0,
+        0,
+        cols - x,
+        0
+      ).width
 
-  function mixinDraggable(
-    child: ReactElement,
-    isDraggable: boolean
-  ): ReactElement {
-    return (
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      <DraggableCore
-        disabled={!isDraggable}
-        onStart={onDragStart}
-        onDrag={onDrag}
-        onStop={onDragStop}
-        // handle={props.handle}
-        // cancel={
-        //   '.react-resizable-handle' +
-        //   (this.props.cancel ? ',' + this.props.cancel : '')
-        // }
-        scale={transformScale}
-        nodeRef={elementRef}
-      >
-        {child}
-      </DraggableCore>
-    )
-  }
+      // Calculate min/max constraints using our min & maxes
+      const mins = calcGridItemPosition(positionParams, 0, 0, minW, minH)
+      const maxes = calcGridItemPosition(positionParams, 0, 0, maxW, maxH)
+
+      const minConstraints: [number, number] = [mins.width, mins.height]
+      const maxConstraints: [number, number] = [
+        Math.min(maxes.width, maxWidth),
+        Math.min(maxes.height, Infinity),
+      ]
+
+      return (
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        <Resizable
+          draggableOpts={{
+            disabled: !isResizable,
+          }}
+          className={isResizable ? undefined : 'react-resizable-hide'}
+          width={position.width}
+          height={position.height}
+          minConstraints={minConstraints}
+          maxConstraints={maxConstraints}
+          onResizeStart={onResizeStart}
+          onResize={onResize}
+          onResizeStop={onResizeStop}
+          transformScale={transformScale}
+          resizeHandles={resizeHandles}
+          handle={resizeHandle}
+        >
+          {child}
+        </Resizable>
+      )
+    },
+    [
+      cols,
+      containerHeight,
+      containerPadding,
+      containerWidth,
+      margin,
+      maxH,
+      maxW,
+      minH,
+      minW,
+      onResize,
+      onResizeStart,
+      onResizeStop,
+      resizeHandle,
+      resizeHandles,
+      rows,
+      transformScale,
+      x,
+    ]
+  )
 
   let newChild = useMemo(
     () =>
@@ -354,7 +563,17 @@ export function GridItem(props: Props) {
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore
-  newChild = mixinDraggable(newChild, isDraggable)
+  newChild = useMemo(
+    () => mixinResizable(newChild, pos, isResizable),
+    [isResizable, mixinResizable, newChild, pos]
+  )
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //@ts-ignore
+  newChild = useMemo(
+    () => mixinDraggable(newChild, isDraggable),
+    [isDraggable, mixinDraggable, newChild]
+  )
 
   return newChild
 }
