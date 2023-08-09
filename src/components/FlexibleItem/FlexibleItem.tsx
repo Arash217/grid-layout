@@ -1,4 +1,4 @@
-import { CSSProperties, ReactElement } from "react"
+import { CSSProperties, ReactElement } from 'react'
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -12,13 +12,9 @@ export function FlexibleItem(props: Props) {
   const { columnWidth, rowHeight, width, height, children } = props
 
   const style: CSSProperties = {
-    width: columnWidth * width + 'px',
-    height: rowHeight * height + 'px',
-  };
+    width: `${columnWidth * width}px`,
+    height: `${rowHeight * height}px`,
+  }
 
-  return (
-    <div style={style}>
-      {children}
-    </div>
-  );
+  return <div style={style}>{children}</div>
 }
