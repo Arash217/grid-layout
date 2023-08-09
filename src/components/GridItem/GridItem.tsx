@@ -461,7 +461,6 @@ function GridItem(props: Props) {
     function () {
       if (!droppingPosition) return
       const node = elementRef.current
-      console.log(node)
       // Can't find DOM node (are we unmounted?)
       if (!node) return
 

@@ -88,6 +88,8 @@ export type Props = {
   ) => { w?: number; h?: number } | false | null | undefined
 }
 
+const DROP_ID = '__dropping-elem__'
+
 function GridLayout(props: Props) {
   const {
     children,
@@ -104,7 +106,6 @@ function GridLayout(props: Props) {
     showGridLines = false,
     isDraggable = false,
     isResizable = false,
-    isDroppable = false,
     isBounded = false,
     transformScale = 1,
     allowOverlap = false,
@@ -122,12 +123,10 @@ function GridLayout(props: Props) {
     onDropDragOver = noop,
     resizeHandles = ['se'],
     resizeHandle,
-    droppingItem = {
-      i: '__dropping-elem__',
-      h: 4,
-      w: 4,
-    },
+    droppingItem,
   } = props
+
+  let { isDroppable = false } = props
 
   const [layout, setLayout] = useState(initialLayout)
   const [oldDragItem, setOldDragItem] = useState<LayoutItem | null>(null)
@@ -142,6 +141,9 @@ function GridLayout(props: Props) {
   >()
 
   const dragEnterCounter = useRef(0)
+
+  isDroppable = isDroppable && Boolean(droppingItem)
+  const isDraggableAndDroppable = isDroppable && isDraggable
 
   useEffect(() => {
     setLayout(initialLayout)
@@ -459,9 +461,9 @@ function GridLayout(props: Props) {
   )
 
   const removeDroppingPlaceholder = useCallback(
-    function (): void {
+    (): void => {
       const newLayout = compact(
-        layout.filter((l) => l.i !== droppingItem.i),
+        layout.filter((l) => l.i !== DROP_ID),
         compactTypeFn({
           compactType,
           verticalCompact,
@@ -475,19 +477,26 @@ function GridLayout(props: Props) {
       setActiveDrag(null)
       setDroppingPosition(undefined)
     },
-    [allowOverlap, cols, compactType, droppingItem.i, layout, verticalCompact]
+    [allowOverlap, cols, compactType, layout, verticalCompact]
   )
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onDragEnter = useCallback(function (e: any) {
-    e.preventDefault()
-    e.stopPropagation()
+  const onDragEnter = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     (e: any): void => {
+      if (!isDraggableAndDroppable) return
 
-    dragEnterCounter.current++
-  }, [])
+      e.preventDefault()
+      e.stopPropagation()
+
+      dragEnterCounter.current++
+    },
+    [isDraggableAndDroppable]
+  )
 
   const onDragOver = useCallback(
     function (e: DragOverEvent): void | false {
+      if (!isDraggableAndDroppable) return
+
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
 
@@ -512,7 +521,7 @@ function GridLayout(props: Props) {
         return false
       }
 
-      const finalDroppingItem = { ...droppingItem, ...onDragOverResult }
+      const finalDroppingItem = { ...droppingItem!, ...onDragOverResult }
 
       // This is relative to the DOM element that this event fired for.
       const { layerX, layerY } = e.nativeEvent
@@ -568,6 +577,7 @@ function GridLayout(props: Props) {
       droppingItem,
       droppingPosition,
       height,
+      isDraggableAndDroppable,
       layout,
       margin,
       onDropDragOver,
@@ -581,6 +591,8 @@ function GridLayout(props: Props) {
   const onDragLeave = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function (e: any) {
+      if (!isDraggableAndDroppable) return
+
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
       dragEnterCounter.current--
@@ -589,15 +601,17 @@ function GridLayout(props: Props) {
         removeDroppingPlaceholder()
       }
     },
-    [removeDroppingPlaceholder]
+    [isDraggableAndDroppable, removeDroppingPlaceholder]
   )
 
   const onDrop = useCallback(
     function (e: Event) {
+      if (!isDraggableAndDroppable) return
+
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
 
-      const item = layout.find((l) => l.i === droppingItem.i)!
+      const item = layout.find((l) => l.i === droppingItem!.i)!
       dragEnterCounter.current = 0
       removeDroppingPlaceholder()
 
@@ -608,7 +622,13 @@ function GridLayout(props: Props) {
 
       onItemDrop(layout, drop, e)
     },
-    [droppingItem.i, layout, onItemDrop, removeDroppingPlaceholder]
+    [
+      droppingItem,
+      isDraggableAndDroppable,
+      layout,
+      onItemDrop,
+      removeDroppingPlaceholder,
+    ]
   )
 
   const placeholder = useCallback(

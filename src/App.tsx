@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
+import { FlexibleItem } from './components/FlexibleItem'
 import { testLayout } from './data'
 
 import { css } from '@linaria/core'
+import { Layout, LayoutItem } from './helpers/utils'
 
 // css`
 //   :global() {
@@ -15,10 +17,13 @@ import { css } from '@linaria/core'
 
 css`
   :global() {
+    .available-widgets {
+      display: flex;
+      margin-bottom: 10px;
+    }
     .droppable-element {
-      width: 300px;
-      height: 100px;
       background: pink;
+      height: 100%;
     }
   }
 `
@@ -40,13 +45,18 @@ function App() {
   })
 
   const [layout, setLayout] = useState(testLayout)
+  const [droppingItem, setDroppingItem] = useState<LayoutItem | undefined>()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleDrop(_: any, item: any) {
-    setLayout((layout) => [...layout, { ...item, i: crypto.randomUUID() }])
+  function handleDrop(layout: Layout, item: any) {
+    setLayout([...layout, { ...item, i: crypto.randomUUID() }])
+    setDroppingItem(undefined)
   }
 
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const columnWidth = state.width / state.cols
+  const rowHeight = state.height / state.rows
 
   // useEffect(() => {
   //   const element = containerRef.current
@@ -71,24 +81,59 @@ function App() {
   //   };
   // }, [])
 
-  const generateDom = useCallback(
-    function () {
-      return layout.map((item) => {
-        return (
-          <div
-            key={item.i}
-            style={{
-              background: 'red',
-            }}
-          >
-            <span className="text">{item.i}</span>
-          </div>
-        )
-      })
-    },
-    [layout]
-  )
+  const generateDom = useCallback(() => {
+    return layout.map((item) => {
+      return (
+        <div
+          key={item.i}
+          style={{
+            background: 'red',
+          }}
+        >
+          <span className="text">{item.i}</span>
+        </div>
+      )
+    })
+  }, [layout])
 
+  const generateAvailableWidgets = useCallback(() => {
+    return testLayout.map((item) => (
+      <FlexibleItem
+        key={item.i}
+        columnWidth={columnWidth}
+        rowHeight={rowHeight}
+        width={item.w}
+        height={item.h}
+      >
+        <div
+          className="droppable-element"
+          draggable={true}
+          unselectable="on"
+          // this is a hack for firefox
+          // Firefox requires some kind of initialization
+          // which we can do by adding this attribute
+          // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
+          onDragStart={(e) => { 
+            e.dataTransfer.setData('text/plain', '')
+
+            const droppingItem = {
+              ...item,
+              i: crypto.randomUUID()
+            }
+
+            setDroppingItem(droppingItem)
+          }}
+        >
+          Droppable Element (Drag me!)
+        </div>
+      </FlexibleItem>
+    ))
+  }, [columnWidth, rowHeight])
+
+  const availableWidgets = useMemo(
+    () => generateAvailableWidgets(),
+    [generateAvailableWidgets]
+  )
   const generatedDOM = useMemo(() => generateDom(), [generateDom])
 
   return (
@@ -120,24 +165,12 @@ function App() {
         />
         <label htmlFor="showGridLines">showGridLines</label>
 
-        <div
-          className="droppable-element"
-          draggable={true}
-          unselectable="on"
-          // this is a hack for firefox
-          // Firefox requires some kind of initialization
-          // which we can do by adding this attribute
-          // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
-          onDragStart={(e) => e.dataTransfer.setData('text/plain', '')}
-        >
-          Droppable Element (Drag me!)
-        </div>
-
+        <div className="available-widgets">{availableWidgets}</div>
         {/* <button click="zoom(0.25)">Zoom in</button>
         <button click="zoom(-0.25)">Zoom out</button>
         <button click="resetView('instant')">Reset view</button> */}
       </div>
-      <GridLayout layout={layout} onDrop={handleDrop} {...state}>
+      <GridLayout layout={layout} droppingItem={droppingItem} onDrop={handleDrop} {...state}>
         {generatedDOM}
       </GridLayout>
     </div>
