@@ -25,6 +25,7 @@ import {
   DragOverEvent,
   DroppingPosition,
   DroppingItem,
+  LayoutItemID,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
@@ -165,7 +166,7 @@ function GridLayout(props: Props) {
 
   const onDragStart = useCallback(
     function (
-      i: string,
+      i: LayoutItemID,
       _x: number,
       _y: number,
       { e, node }: GridDragEvent
@@ -183,7 +184,7 @@ function GridLayout(props: Props) {
 
   const onDrag = useCallback(
     function (
-      i: string,
+      i: LayoutItemID,
       x: number,
       y: number,
       { e, node }: GridDragEvent
@@ -261,7 +262,7 @@ function GridLayout(props: Props) {
 
   const onDragStop = useCallback(
     function (
-      i: string,
+      i: LayoutItemID,
       x: number,
       y: number,
       { e, node }: GridDragEvent
@@ -325,7 +326,7 @@ function GridLayout(props: Props) {
 
   const onResizeStart = useCallback(
     function (
-      i: string,
+      i: LayoutItemID,
       _w: number,
       _h: number,
       { e, node }: GridResizeEvent
@@ -343,7 +344,7 @@ function GridLayout(props: Props) {
 
   const onResize = useCallback(
     function (
-      i: string,
+      i: LayoutItemID,
       w: number,
       h: number,
       { e, node }: GridResizeEvent
@@ -421,7 +422,7 @@ function GridLayout(props: Props) {
 
   const onResizeStop = useCallback(
     function (
-      i: string,
+      i: LayoutItemID,
       _w: number,
       _h: number,
       { e, node }: GridResizeEvent

@@ -26,12 +26,15 @@ export type DragOverEvent = MouseEvent & {
   } & Event
 };
 
+export type UUID = ReturnType<typeof crypto.randomUUID>
+export type LayoutItemID = UUID | string
+
 export type LayoutItem = {
   w: number
   h: number
   x: number
   y: number
-  i: string
+  i: LayoutItemID
   minW?: number
   minH?: number
   maxW?: number
@@ -69,7 +72,7 @@ export type EventCallback = (
 
 export type CompactType = 'horizontal' | 'vertical' | null
 
-export function getLayoutItem(layout: Layout, id: string) {
+export function getLayoutItem(layout: Layout, id: LayoutItemID) {
   for (let i = 0, len = layout.length; i < len; i++) {
     if (layout[i].i === id) return layout[i]
   }
@@ -456,7 +459,7 @@ export function modifyLayout(layout: Layout, layoutItem: LayoutItem): Layout {
 
 export function withLayoutItem(
   layout: Layout,
-  itemKey: string,
+  itemKey: LayoutItemID,
   cb: (layoutItem: LayoutItem) => LayoutItem
 ): [Layout, LayoutItem | null] {
   let item = getLayoutItem(layout, itemKey)

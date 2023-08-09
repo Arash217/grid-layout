@@ -31,3 +31,5 @@ export const testLayout = [
     resizeHandles: ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] as any,
   },
 ]
+
+export type DataType = typeof testLayout

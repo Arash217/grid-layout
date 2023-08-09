@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
 import { FlexibleItem } from './components/FlexibleItem'
-import { testLayout } from './data'
+import { DataType, testLayout } from './data'
 
 import { css } from '@linaria/core'
 import { DroppingItem, Layout } from './helpers/utils'
@@ -47,12 +47,8 @@ function App() {
   const [layout, setLayout] = useState(testLayout)
   const [droppingItem, setDroppingItem] = useState<DroppingItem | undefined>()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handleDrop(layout: Layout) {
-    console.log(layout)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    setLayout([...layout])
+    setLayout([...layout as DataType])
     setDroppingItem(undefined)
   }
 

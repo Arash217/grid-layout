@@ -31,10 +31,11 @@ import {
   GridDragEvent,
   GridResizeEvent,
   DroppingPosition,
+  LayoutItemID,
 } from '../../helpers/utils'
 
 type GridItemCallback<Data extends GridDragEvent | GridResizeEvent> = (
-  i: string,
+  i: LayoutItemID,
   w: number,
   h: number,
   data: Data
@@ -70,7 +71,7 @@ export type Props = {
   className?: string
   style?: Record<string, string>
 
-  i: string
+  i: LayoutItemID
 
   x: number
   y: number
