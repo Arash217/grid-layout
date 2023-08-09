@@ -164,8 +164,8 @@ function GridLayout(props: Props) {
   const onDragStart = useCallback(
     function (
       i: string,
-      x: number,
-      y: number,
+      _x: number,
+      _y: number,
       { e, node }: GridDragEvent
     ): void {
       const l = getLayoutItem(layout, i)
@@ -324,8 +324,8 @@ function GridLayout(props: Props) {
   const onResizeStart = useCallback(
     function (
       i: string,
-      w: number,
-      h: number,
+      _w: number,
+      _h: number,
       { e, node }: GridResizeEvent
     ): void {
       const l = getLayoutItem(layout, i)
@@ -380,15 +380,12 @@ function GridLayout(props: Props) {
         return l
       })
 
-      // Shouldn't ever happen, but typechecking makes it necessary
-      if (!l) return
-
       // Create placeholder element (display only)
       const placeholder = {
-        w: l.w,
-        h: l.h,
-        x: l.x,
-        y: l.y,
+        w: l!.w,
+        h: l!.h,
+        x: l!.x,
+        y: l!.y,
         static: true,
         i: i,
       }
@@ -423,8 +420,8 @@ function GridLayout(props: Props) {
   const onResizeStop = useCallback(
     function (
       i: string,
-      w: number,
-      h: number,
+      _w: number,
+      _h: number,
       { e, node }: GridResizeEvent
     ): void {
       const l = getLayoutItem(layout, i)
