@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { GridItem } from '../GridItem'
@@ -87,8 +88,6 @@ export type Props = {
   ) => { w?: number; h?: number } | false | null | undefined
 }
 
-let dragEnterCounter = 0
-
 function GridLayout(props: Props) {
   const {
     children,
@@ -141,6 +140,8 @@ function GridLayout(props: Props) {
   const [droppingPosition, setDroppingPosition] = useState<
     DroppingPosition | undefined
   >()
+
+  const dragEnterCounter = useRef(0)
 
   useEffect(() => {
     setLayout(initialLayout)
@@ -482,7 +483,7 @@ function GridLayout(props: Props) {
     e.preventDefault()
     e.stopPropagation()
 
-    dragEnterCounter += 1
+    dragEnterCounter.current++
   }, [])
 
   const onDragOver = useCallback(
@@ -582,9 +583,9 @@ function GridLayout(props: Props) {
     function (e: any) {
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
-      dragEnterCounter -= 1
+      dragEnterCounter.current--
 
-      if (dragEnterCounter === 0) {
+      if (dragEnterCounter.current === 0) {
         removeDroppingPlaceholder()
       }
     },
@@ -597,7 +598,7 @@ function GridLayout(props: Props) {
       e.stopPropagation()
 
       const item = layout.find((l) => l.i === droppingItem.i)!
-      dragEnterCounter = 0
+      dragEnterCounter.current = 0
       removeDroppingPlaceholder()
 
       const drop = {
