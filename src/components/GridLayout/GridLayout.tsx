@@ -545,8 +545,6 @@ function GridLayout(props: Props) {
           finalDroppingItem.h
         )
 
-        console.log(layout)
-
         setDroppingDOMNode(<div key={finalDroppingItem.i} />)
         setDroppingPosition(newDroppingPosition)
         setLayout([
