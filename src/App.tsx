@@ -48,8 +48,10 @@ function App() {
   const [droppingItem, setDroppingItem] = useState<LayoutItem | undefined>()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleDrop(layout: Layout, item: any) {
-    setLayout([...layout, { ...item, i: crypto.randomUUID() }])
+  function handleDrop(layout: Layout) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    setLayout([...layout])
     setDroppingItem(undefined)
   }
 
