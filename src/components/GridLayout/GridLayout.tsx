@@ -140,6 +140,7 @@ function GridLayout(props: Props) {
     DroppingPosition | undefined
   >()
 
+  const gridLayoutRef = useRef<HTMLDivElement | null>(null)
   const dragEnterCounter = useRef(0)
 
   isDroppable = isDroppable && Boolean(droppingItem)
@@ -362,8 +363,9 @@ function GridLayout(props: Props) {
           // If we're colliding, we need adjust the placeholder.
           if (hasCollisions) {
             // adjust w && h to maximum allowed space
-            let leastX = Infinity,
-              leastY = Infinity
+            let leastX = Infinity
+            let leastY = Infinity
+
             collisions.forEach((layoutItem) => {
               if (layoutItem.x > l.x) leastX = Math.min(leastX, layoutItem.x)
               if (layoutItem.y > l.y) leastY = Math.min(leastY, layoutItem.y)
@@ -522,9 +524,10 @@ function GridLayout(props: Props) {
 
       // This is relative to the DOM element that this event fired for.
       const { layerX, layerY } = e.nativeEvent
+
       const newDroppingPosition = {
-        left: layerX / transformScale - finalDroppingItem.offsetX,
         top: layerY / transformScale - finalDroppingItem.offsetY,
+        left: layerX / transformScale - finalDroppingItem.offsetX,
         e,
       }
 
@@ -540,8 +543,8 @@ function GridLayout(props: Props) {
 
         const calculatedPosition = calcXY(
           positionParams,
-          layerY,
-          layerX,
+          newDroppingPosition.top,
+          newDroppingPosition.left,
           finalDroppingItem.w,
           finalDroppingItem.h
         )
@@ -567,22 +570,7 @@ function GridLayout(props: Props) {
         }
       }
     },
-    [
-      cols,
-      containerPadding,
-      droppingDOMNode,
-      droppingItem,
-      droppingPosition,
-      height,
-      isDraggableAndDroppable,
-      layout,
-      margin,
-      onDropDragOver,
-      removeDroppingPlaceholder,
-      rows,
-      transformScale,
-      width,
-    ]
+    [cols, containerPadding, droppingDOMNode, droppingItem, droppingPosition, height, isDraggableAndDroppable, layout, margin, onDropDragOver, removeDroppingPlaceholder, rows, transformScale, width]
   )
 
   const onDragLeave = useCallback(
@@ -775,6 +763,7 @@ function GridLayout(props: Props) {
   const gridLayout = useMemo(
     () => (
       <div
+        ref={gridLayoutRef}
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         onDrop={isDroppable ? onDrop : noop}
