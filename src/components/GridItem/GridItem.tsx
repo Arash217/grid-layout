@@ -1,6 +1,7 @@
 import React, {
   ReactElement,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -10,6 +11,7 @@ import clsx from 'clsx'
 import { DraggableCore } from 'react-draggable'
 import 'react-resizable/css/styles.css'
 import { Resizable } from 'react-resizable'
+import { styled } from '@linaria/react'
 
 import {
   calcGridColWidth,
@@ -28,6 +30,7 @@ import {
   setTransform,
   GridDragEvent,
   GridResizeEvent,
+  DroppingPosition,
 } from '../../helpers/utils'
 
 type GridItemCallback<Data extends GridDragEvent | GridResizeEvent> = (
@@ -62,6 +65,7 @@ export type Props = {
   useCSSTransforms?: boolean
   usePercentages?: boolean
   transformScale: number
+  droppingPosition?: DroppingPosition
 
   className?: string
   style?: Record<string, string>
@@ -95,7 +99,19 @@ export type Props = {
   onResizeStop?: GridItemCallback<GridResizeEvent>
 }
 
-export function GridItem(props: Props) {
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+function usePrevious(value) {
+  const ref = useRef(value)
+
+  useEffect(() => {
+    ref.current = value
+  }, [value])
+
+  return ref.current
+}
+
+function GridItem(props: Props) {
   const {
     children,
     className,
@@ -119,6 +135,7 @@ export function GridItem(props: Props) {
     useCSSTransforms,
     isDraggable,
     isResizable,
+    droppingPosition,
     transformScale,
     resizeHandles,
     resizeHandle,
@@ -133,6 +150,7 @@ export function GridItem(props: Props) {
     left: number
   } | null>(null)
   const elementRef = useRef<HTMLDivElement | null>(null)
+  const prevProps = usePrevious(props)
 
   const pos = useMemo(
     () =>
@@ -241,7 +259,15 @@ export function GridItem(props: Props) {
         newPosition,
       })
     },
-    [cols, containerHeight, containerPadding, containerWidth, margin, props, resizing, rows]
+    [
+      cols,
+      containerHeight,
+      containerPadding,
+      containerWidth,
+      margin,
+      props,
+      rows,
+    ]
   )
 
   const onDrag = useCallback(
@@ -431,6 +457,53 @@ export function GridItem(props: Props) {
     [onResizeHandler]
   )
 
+  const moveDroppingItem = useCallback(
+    function () {
+      if (!droppingPosition) return
+      const node = elementRef.current
+      console.log(node)
+      // Can't find DOM node (are we unmounted?)
+      if (!node) return
+
+      const prevDroppingPosition = prevProps.droppingPosition || {
+        left: 0,
+        top: 0,
+      }
+
+      const shouldDrag =
+        (dragging && droppingPosition.left !== prevDroppingPosition.left) ||
+        droppingPosition.top !== prevDroppingPosition.top
+
+      if (!dragging) {
+        onDragStart(droppingPosition.e, {
+          node,
+          deltaX: droppingPosition.left,
+          deltaY: droppingPosition.top,
+        })
+      } else if (shouldDrag) {
+        const deltaX = droppingPosition.left - dragging.left
+        const deltaY = droppingPosition.top - dragging.top
+
+        onDrag(droppingPosition.e, {
+          node,
+          deltaX,
+          deltaY,
+        })
+      }
+    },
+    [
+      dragging,
+      droppingPosition,
+      onDrag,
+      onDragStart,
+      prevProps.droppingPosition,
+    ]
+  )
+
+  useEffect(() => {
+    moveDroppingItem()
+  }, [moveDroppingItem])
+
   const mixinDraggable = useCallback(
     function (child: ReactElement, isDraggable: boolean): ReactElement {
       return (
@@ -539,8 +612,8 @@ export function GridItem(props: Props) {
           resizing: Boolean(resizing),
           // "react-draggable": isDraggable,
           'react-draggable-dragging': Boolean(dragging),
-          // dropping: Boolean(droppingPosition),
-          // cssTransforms: useCSSTransforms
+          dropping: Boolean(droppingPosition),
+          cssTransforms: useCSSTransforms,
         }),
         // We can set the width and height on the child, but unfortunately we can't set the position.
         style: {
@@ -554,10 +627,12 @@ export function GridItem(props: Props) {
       className,
       createStyle,
       dragging,
+      droppingPosition,
       pos,
       props.static,
       resizing,
       style,
+      useCSSTransforms,
     ]
   )
 
@@ -577,3 +652,11 @@ export function GridItem(props: Props) {
 
   return newChild
 }
+
+const StyledGridItem = styled(GridItem)`
+  &.dropping {
+    visibility: hidden;
+  }
+`
+
+export { StyledGridItem as GridItem }

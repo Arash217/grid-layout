@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
 import { testLayout } from './data'
 
-// import { css } from '@linaria/core'
+import { css } from '@linaria/core'
 
 // css`
 //   :global() {
@@ -12,6 +12,16 @@ import { testLayout } from './data'
 //     }
 //   }
 // `
+
+css`
+  :global() {
+    .droppable-element {
+      width: 300px;
+      height: 100px;
+      background: pink;
+    }
+  }
+`
 
 function App() {
   const [state, setState] = useState({
@@ -26,7 +36,15 @@ function App() {
     isResizable: true,
     compactType: null,
     isBounded: false,
+    isDroppable: true,
   })
+
+  const [layout, setLayout] = useState(testLayout)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleDrop(_: any, item: any) {
+    setLayout((layout) => [...layout, { ...item, i: crypto.randomUUID() }])
+  }
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -53,37 +71,39 @@ function App() {
   //   };
   // }, [])
 
-  const generateDom = useCallback(function () {
-    return testLayout.map((item) => {
-      return (
-        <div
-          key={item.i}
-          style={{
-            background: 'red',
-          }}
-        >
-          <span className="text">{item.i}</span>
-        </div>
-      )
-    })
-  }, [])
+  const generateDom = useCallback(
+    function () {
+      return layout.map((item) => {
+        return (
+          <div
+            key={item.i}
+            style={{
+              background: 'red',
+            }}
+          >
+            <span className="text">{item.i}</span>
+          </div>
+        )
+      })
+    },
+    [layout]
+  )
 
   const generatedDOM = useMemo(() => generateDom(), [generateDom])
 
   return (
-    <div ref={containerRef} style={{
-      width: '100%',
-      height: '100%'
-    }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+      }}
+    >
       <div className="app__inputs-container">
         <input type="number" v-model="width" />
         <input type="number" v-model="height" />
 
-        <input
-          type="checkbox"
-          id="isBounded"
-          name="isBounded"
-        />
+        <input type="checkbox" id="isBounded" name="isBounded" />
         <label htmlFor="isBounded">isBounded</label>
 
         <input
@@ -91,18 +111,33 @@ function App() {
           id="showGridLines"
           name="showGridLines"
           defaultChecked={state.showGridLines}
-          onChange={() => setState(state => ({
-            ...state,
-            showGridLines: !state.showGridLines
-          }))}
+          onChange={() =>
+            setState((state) => ({
+              ...state,
+              showGridLines: !state.showGridLines,
+            }))
+          }
         />
         <label htmlFor="showGridLines">showGridLines</label>
+
+        <div
+          className="droppable-element"
+          draggable={true}
+          unselectable="on"
+          // this is a hack for firefox
+          // Firefox requires some kind of initialization
+          // which we can do by adding this attribute
+          // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
+          onDragStart={(e) => e.dataTransfer.setData('text/plain', '')}
+        >
+          Droppable Element (Drag me!)
+        </div>
 
         {/* <button click="zoom(0.25)">Zoom in</button>
         <button click="zoom(-0.25)">Zoom out</button>
         <button click="resetView('instant')">Reset view</button> */}
       </div>
-      <GridLayout layout={testLayout} {...state}>
+      <GridLayout layout={layout} onDrop={handleDrop} {...state}>
         {generatedDOM}
       </GridLayout>
     </div>

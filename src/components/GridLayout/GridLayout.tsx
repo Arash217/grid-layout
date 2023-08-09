@@ -1,4 +1,10 @@
-import React, { ReactElement, useCallback, useMemo, useState } from 'react'
+import React, {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { GridItem } from '../GridItem'
 import {
   CompactType,
@@ -15,14 +21,24 @@ import {
   noop,
   withLayoutItem,
   getAllCollisions,
+  DragOverEvent,
+  DroppingPosition,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
 import { styled } from '@linaria/react'
 import clsx from 'clsx'
 import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
+import { PositionParams, calcXY } from '../../helpers/calculateUtils'
 
 const layoutClassName = 'react-grid-layout'
+let isFirefox = false
+// Try...catch will protect from navigator not existing (e.g. node) or a bad implementation of navigator
+try {
+  isFirefox = /firefox/i.test(navigator.userAgent)
+} catch (e) {
+  /* Ignore */
+}
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -41,6 +57,7 @@ export type Props = {
   showGridLines?: boolean
   isDraggable?: boolean
   isResizable?: boolean
+  isDroppable?: boolean
   isBounded?: boolean
   transformScale?: number
   allowOverlap?: boolean
@@ -49,6 +66,7 @@ export type Props = {
   compactType?: CompactType
   resizeHandles?: ResizeHandleAxis[]
   resizeHandle?: ResizeHandle
+  droppingItem?: LayoutItem
 
   onLayoutChange?: (layout: Layout) => void
   onDragStart?: EventCallback
@@ -58,7 +76,18 @@ export type Props = {
   onResize?: EventCallback
   onResizeStart?: EventCallback
   onResizeStop?: EventCallback
+
+  onDrop?: (
+    layout: Layout,
+    item: Omit<LayoutItem, 'i'> | undefined,
+    e: Event
+  ) => void
+  onDropDragOver?: (
+    e: DragOverEvent
+  ) => { w?: number; h?: number } | false | null | undefined
 }
+
+let dragEnterCounter = 0
 
 function GridLayout(props: Props) {
   const {
@@ -76,6 +105,7 @@ function GridLayout(props: Props) {
     showGridLines = false,
     isDraggable = false,
     isResizable = false,
+    isDroppable = false,
     isBounded = false,
     transformScale = 1,
     allowOverlap = false,
@@ -89,8 +119,15 @@ function GridLayout(props: Props) {
     onResizeStart: onItemResizeStart = noop,
     onResize: onItemResize = noop,
     onDragStop: onItemResizeStop = noop,
+    onDrop: onItemDrop = noop,
+    onDropDragOver = noop,
     resizeHandles = ['se'],
     resizeHandle,
+    droppingItem = {
+      i: '__dropping-elem__',
+      h: 4,
+      w: 4,
+    },
   } = props
 
   const [layout, setLayout] = useState(initialLayout)
@@ -98,6 +135,16 @@ function GridLayout(props: Props) {
   const [oldResizeItem, setOldResizeItem] = useState<LayoutItem | null>(null)
   const [oldLayout, setOldLayout] = useState<Layout | null>(null)
   const [activeDrag, setActiveDrag] = useState<LayoutItem | null>(null)
+  const [droppingDOMNode, setDroppingDOMNode] = useState<ReactElement | null>(
+    null
+  )
+  const [droppingPosition, setDroppingPosition] = useState<
+    DroppingPosition | undefined
+  >()
+
+  useEffect(() => {
+    setLayout(initialLayout)
+  }, [initialLayout])
 
   const mergedClassName = useMemo(
     () => clsx(layoutClassName, className, { 'grid-lines': showGridLines }),
@@ -413,42 +460,208 @@ function GridLayout(props: Props) {
     ]
   )
 
-  function placeholder() {
-    if (!activeDrag) return null
+  const removeDroppingPlaceholder = useCallback(
+    function (): void {
+      const newLayout = compact(
+        layout.filter((l) => l.i !== droppingItem.i),
+        compactTypeFn({
+          compactType,
+          verticalCompact,
+        }),
+        cols,
+        allowOverlap
+      )
 
-    return (
-      <GridItem
-        style={{
-          background: 'green',
-          opacity: '0.3',
-          transitionProperty: 'transform, width, height',
-          transitionDuration: '100ms',
-        }}
-        w={activeDrag.w}
-        h={activeDrag.h}
-        x={activeDrag.x}
-        y={activeDrag.y}
-        i={activeDrag.i}
-        className="react-grid-placeholder"
-        containerWidth={width}
-        containerHeight={height}
-        cols={cols}
-        rows={rows}
-        margin={margin}
-        containerPadding={containerPadding || margin}
-        isDraggable={false}
-        isResizable={false}
-        isBounded={false}
-        useCSSTransforms={useCSSTransforms}
-        transformScale={transformScale}
-      >
-        <div />
-      </GridItem>
-    )
-  }
+      setLayout(newLayout)
+      setDroppingDOMNode(null)
+      setActiveDrag(null)
+      setDroppingPosition(undefined)
+    },
+    [allowOverlap, cols, compactType, droppingItem.i, layout, verticalCompact]
+  )
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onDragEnter = useCallback(function (e: any) {
+    e.preventDefault()
+    e.stopPropagation()
+
+    dragEnterCounter += 1
+  }, [])
+
+  const onDragOver = useCallback(
+    function (e: DragOverEvent): void | false {
+      e.preventDefault() // Prevent any browser native action
+      e.stopPropagation()
+
+      // we should ignore events from layout's children in Firefox
+      // to avoid unpredictable jumping of a dropping placeholder
+      // FIXME remove this hack
+      if (
+        isFirefox &&
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        !e.nativeEvent.target?.classList.contains(layoutClassName)
+      ) {
+        return false
+      }
+
+      const onDragOverResult = onDropDragOver?.(e)
+
+      if (onDragOverResult === false) {
+        if (droppingDOMNode) {
+          removeDroppingPlaceholder()
+        }
+        return false
+      }
+
+      const finalDroppingItem = { ...droppingItem, ...onDragOverResult }
+
+      // This is relative to the DOM element that this event fired for.
+      const { layerX, layerY } = e.nativeEvent
+      const newDroppingPosition = {
+        left: layerX / transformScale,
+        top: layerY / transformScale,
+        e,
+      }
+
+      if (!droppingDOMNode) {
+        const positionParams: PositionParams = {
+          cols,
+          margin,
+          rows,
+          containerHeight: height,
+          containerWidth: width,
+          containerPadding: containerPadding || margin,
+        }
+
+        const calculatedPosition = calcXY(
+          positionParams,
+          layerY,
+          layerX,
+          finalDroppingItem.w,
+          finalDroppingItem.h
+        )
+
+        setDroppingDOMNode(<div key={finalDroppingItem.i} />)
+        setDroppingPosition(newDroppingPosition)
+        setLayout([
+          ...layout,
+          {
+            ...finalDroppingItem,
+            x: calculatedPosition.x,
+            y: calculatedPosition.y,
+            static: false,
+            isDraggable: true,
+          },
+        ])
+      } else if (droppingPosition) {
+        const { left, top } = droppingPosition
+        const shouldUpdatePosition = left !== layerX || top !== layerY
+
+        if (shouldUpdatePosition) {
+          setDroppingPosition(newDroppingPosition)
+        }
+      }
+    },
+    [
+      cols,
+      containerPadding,
+      droppingDOMNode,
+      droppingItem,
+      droppingPosition,
+      height,
+      layout,
+      margin,
+      onDropDragOver,
+      removeDroppingPlaceholder,
+      rows,
+      transformScale,
+      width,
+    ]
+  )
+
+  const onDragLeave = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function (e: any) {
+      e.preventDefault() // Prevent any browser native action
+      e.stopPropagation()
+      dragEnterCounter -= 1
+
+      if (dragEnterCounter === 0) {
+        removeDroppingPlaceholder()
+      }
+    },
+    [removeDroppingPlaceholder]
+  )
+
+  const onDrop = useCallback(
+    function (e: Event) {
+      e.preventDefault() // Prevent any browser native action
+      e.stopPropagation()
+
+      const item = layout.find((l) => l.i === droppingItem.i)!
+      dragEnterCounter = 0
+      removeDroppingPlaceholder()
+
+      const drop = {
+        ...item,
+        i: undefined,
+      }
+
+      onItemDrop(layout, drop, e)
+    },
+    [droppingItem.i, layout, onItemDrop, removeDroppingPlaceholder]
+  )
+
+  const placeholder = useCallback(
+    function () {
+      if (!activeDrag) return null
+
+      return (
+        <GridItem
+          style={{
+            background: 'green',
+            opacity: '0.3',
+            transitionProperty: 'transform, width, height',
+            transitionDuration: '100ms',
+          }}
+          w={activeDrag.w}
+          h={activeDrag.h}
+          x={activeDrag.x}
+          y={activeDrag.y}
+          i={activeDrag.i}
+          className="react-grid-placeholder"
+          containerWidth={width}
+          containerHeight={height}
+          cols={cols}
+          rows={rows}
+          margin={margin}
+          containerPadding={containerPadding || margin}
+          isDraggable={false}
+          isResizable={false}
+          isBounded={false}
+          useCSSTransforms={useCSSTransforms}
+          transformScale={transformScale}
+        >
+          <div />
+        </GridItem>
+      )
+    },
+    [
+      activeDrag,
+      cols,
+      containerPadding,
+      height,
+      margin,
+      rows,
+      transformScale,
+      useCSSTransforms,
+      width,
+    ]
+  )
 
   const processGridItem = useCallback(
-    function (child: ReactElement) {
+    function (child: ReactElement, isDroppingItem?: boolean) {
       if (!child || !child.key) return
 
       const l = getLayoutItem(layout, String(child.key))
@@ -470,6 +683,9 @@ function GridLayout(props: Props) {
 
       return (
         <GridItem
+          style={{
+            background: isDroppingItem ? 'red' : '',
+          }}
           containerWidth={width}
           containerHeight={height}
           margin={margin}
@@ -497,6 +713,7 @@ function GridLayout(props: Props) {
           onResizeStart={onResizeStart}
           onResize={onResize}
           onResizeStop={onResizeStop}
+          droppingPosition={isDroppingItem ? droppingPosition : undefined}
           resizeHandles={resizeHandlesOptions}
           resizeHandle={resizeHandle}
         >
@@ -507,6 +724,7 @@ function GridLayout(props: Props) {
     [
       cols,
       containerPadding,
+      droppingPosition,
       height,
       isBounded,
       isDraggable,
@@ -533,12 +751,46 @@ function GridLayout(props: Props) {
     [children, processGridItem]
   )
 
-  return (
-    <div className={mergedClassName} style={mergedStyle}>
-      {placeholder()}
-      {gridItems}
-    </div>
+  const drop = useMemo(
+    () =>
+      isDroppable && droppingDOMNode && processGridItem(droppingDOMNode, true),
+    [droppingDOMNode, isDroppable, processGridItem]
   )
+
+  const gridLayout = useMemo(
+    () => (
+      <div
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        onDrop={isDroppable ? onDrop : noop}
+        onDragEnter={isDroppable ? onDragEnter : noop}
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        onDragOver={isDroppable ? onDragOver : noop}
+        onDragLeave={isDroppable ? onDragLeave : noop}
+        className={mergedClassName}
+        style={mergedStyle}
+      >
+        {drop}
+        {placeholder()}
+        {gridItems}
+      </div>
+    ),
+    [
+      drop,
+      gridItems,
+      isDroppable,
+      mergedClassName,
+      mergedStyle,
+      onDragEnter,
+      onDragLeave,
+      onDragOver,
+      onDrop,
+      placeholder,
+    ]
+  )
+
+  return gridLayout
 }
 
 const StyledGridLayout = styled(GridLayout)`

@@ -19,6 +19,13 @@ export type GridDragEvent = {
 }
 export type GridResizeEvent = { e: Event; node: HTMLElement; size: Size }
 
+export type DragOverEvent = MouseEvent & {
+  nativeEvent: {
+    layerX: number,
+    layerY: number,
+  } & Event
+};
+
 export type LayoutItem = {
   w: number
   h: number
@@ -438,7 +445,7 @@ export function modifyLayout(layout: Layout, layoutItem: LayoutItem): Layout {
       newLayout[i] = layout[i];
     }
   }
-  
+
   return newLayout;
 }
 
