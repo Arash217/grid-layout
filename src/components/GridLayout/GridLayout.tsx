@@ -353,26 +353,19 @@ function GridLayout(props: Props) {
       const [newLayout, l] = withLayoutItem(layout, i, (l) => {
         // Something like quad tree should be used
         // to find collisions faster
+        const oldW = l.w
+        const oldH = l.h
         let hasCollisions
+
         if (preventCollision && !allowOverlap) {
           const collisions = getAllCollisions(layout, { ...l, w, h }).filter(
             (layoutItem) => layoutItem.i !== l.i
           )
           hasCollisions = collisions.length > 0
 
-          // If we're colliding, we need adjust the placeholder.
           if (hasCollisions) {
-            // adjust w && h to maximum allowed space
-            let leastX = Infinity
-            let leastY = Infinity
-
-            collisions.forEach((layoutItem) => {
-              if (layoutItem.x > l.x) leastX = Math.min(leastX, layoutItem.x)
-              if (layoutItem.y > l.y) leastY = Math.min(leastY, layoutItem.y)
-            })
-
-            if (Number.isFinite(leastX)) l.w = leastX - l.x
-            if (Number.isFinite(leastY)) l.h = leastY - l.y
+            l.w = oldW
+            l.h = oldH
           }
         }
 

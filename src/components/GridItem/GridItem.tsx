@@ -654,6 +654,10 @@ function GridItem(props: Props) {
 }
 
 const StyledGridItem = styled(GridItem)`
+  &.resizing {
+    opacity: 0.7;
+  }
+
   &.dropping {
     visibility: hidden;
   }
