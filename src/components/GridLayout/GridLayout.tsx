@@ -24,6 +24,7 @@ import {
   getAllCollisions,
   DragOverEvent,
   DroppingPosition,
+  DroppingItem,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
@@ -67,7 +68,7 @@ export type Props = {
   compactType?: CompactType
   resizeHandles?: ResizeHandleAxis[]
   resizeHandle?: ResizeHandle
-  droppingItem?: LayoutItem
+  droppingItem?: DroppingItem
 
   onLayoutChange?: (layout: Layout) => void
   onDragStart?: EventCallback
@@ -87,8 +88,6 @@ export type Props = {
     e: DragOverEvent
   ) => { w?: number; h?: number } | false | null | undefined
 }
-
-const DROP_ID = '__dropping-elem__'
 
 function GridLayout(props: Props) {
   const {
@@ -460,29 +459,26 @@ function GridLayout(props: Props) {
     ]
   )
 
-  const removeDroppingPlaceholder = useCallback(
-    (): void => {
-      const newLayout = compact(
-        layout.filter((l) => l.i !== DROP_ID),
-        compactTypeFn({
-          compactType,
-          verticalCompact,
-        }),
-        cols,
-        allowOverlap
-      )
+  const removeDroppingPlaceholder = useCallback((): void => {
+    const newLayout = compact(
+      layout.filter((l) => l.i !== droppingItem!.i),
+      compactTypeFn({
+        compactType,
+        verticalCompact,
+      }),
+      cols,
+      allowOverlap
+    )
 
-      setLayout(newLayout)
-      setDroppingDOMNode(null)
-      setActiveDrag(null)
-      setDroppingPosition(undefined)
-    },
-    [allowOverlap, cols, compactType, layout, verticalCompact]
-  )
+    setLayout(newLayout)
+    setDroppingDOMNode(null)
+    setActiveDrag(null)
+    setDroppingPosition(undefined)
+  }, [allowOverlap, cols, compactType, droppingItem, layout, verticalCompact])
 
   const onDragEnter = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-     (e: any): void => {
+    (e: any): void => {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault()
@@ -526,8 +522,8 @@ function GridLayout(props: Props) {
       // This is relative to the DOM element that this event fired for.
       const { layerX, layerY } = e.nativeEvent
       const newDroppingPosition = {
-        left: layerX / transformScale,
-        top: layerY / transformScale,
+        left: layerX / transformScale - finalDroppingItem.offsetX,
+        top: layerY / transformScale - finalDroppingItem.offsetY,
         e,
       }
 
@@ -548,6 +544,8 @@ function GridLayout(props: Props) {
           finalDroppingItem.w,
           finalDroppingItem.h
         )
+
+        console.log(layout)
 
         setDroppingDOMNode(<div key={finalDroppingItem.i} />)
         setDroppingPosition(newDroppingPosition)

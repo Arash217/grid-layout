@@ -4,7 +4,7 @@ import { FlexibleItem } from './components/FlexibleItem'
 import { testLayout } from './data'
 
 import { css } from '@linaria/core'
-import { Layout, LayoutItem } from './helpers/utils'
+import { DroppingItem, Layout } from './helpers/utils'
 
 // css`
 //   :global() {
@@ -45,10 +45,11 @@ function App() {
   })
 
   const [layout, setLayout] = useState(testLayout)
-  const [droppingItem, setDroppingItem] = useState<LayoutItem | undefined>()
+  const [droppingItem, setDroppingItem] = useState<DroppingItem | undefined>()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handleDrop(layout: Layout) {
+    console.log(layout)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore
     setLayout([...layout])
@@ -120,7 +121,9 @@ function App() {
 
             const droppingItem = {
               ...item,
-              i: crypto.randomUUID()
+              i: crypto.randomUUID(),
+              offsetX: e.nativeEvent.offsetX,
+              offsetY: e.nativeEvent.offsetY
             }
 
             setDroppingItem(droppingItem)

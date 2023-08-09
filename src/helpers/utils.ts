@@ -44,6 +44,11 @@ export type LayoutItem = {
   moved?: boolean
 }
 
+export type DroppingItem = LayoutItem & {
+  offsetX: number
+  offsetY: number
+}
+
 export type Layout = readonly LayoutItem[]
 
 export type Position = {
