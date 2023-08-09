@@ -497,9 +497,7 @@ function GridLayout(props: Props) {
       // FIXME remove this hack
       if (
         isFirefox &&
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        !e.nativeEvent.target?.classList.contains(layoutClassName)
+        !(e.nativeEvent.target as HTMLElement).classList.contains(layoutClassName)
       ) {
         return false
       }
