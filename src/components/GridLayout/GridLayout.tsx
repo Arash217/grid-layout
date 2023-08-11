@@ -26,6 +26,7 @@ import {
   DroppingPosition,
   DroppingItem,
   LayoutItemID,
+  mouseInGrid,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
@@ -35,13 +36,6 @@ import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
 import { PositionParams, calcXY } from '../../helpers/calculateUtils'
 
 const layoutClassName = 'react-grid-layout'
-let isFirefox = false
-// Try...catch will protect from navigator not existing (e.g. node) or a bad implementation of navigator
-try {
-  isFirefox = /firefox/i.test(navigator.userAgent)
-} catch (e) {
-  /* Ignore */
-}
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -120,7 +114,6 @@ function GridLayout(props: Props) {
     onResize: onItemResize = noop,
     onDragStop: onItemResizeStop = noop,
     onDrop: onItemDrop = noop,
-    onDropDragOver = noop,
     resizeHandles = ['se'],
     resizeHandle,
     droppingItem,
@@ -141,7 +134,6 @@ function GridLayout(props: Props) {
   >()
 
   const gridLayoutRef = useRef<HTMLDivElement | null>(null)
-  const dragEnterCounter = useRef(0)
 
   isDroppable = isDroppable && Boolean(droppingItem)
   const isDraggableAndDroppable = isDroppable && isDraggable
@@ -164,6 +156,11 @@ function GridLayout(props: Props) {
       ...style,
     }
   }, [width, height, style])
+
+  // function addDragOverEvent(e: DragEvent) {
+  //   mouseXY.current.x = e.clientX
+  //   mouseXY.current.y = e.clientY
+  // }
 
   const onDragStart = useCallback(
     function (
@@ -472,57 +469,28 @@ function GridLayout(props: Props) {
     setDroppingPosition(undefined)
   }, [allowOverlap, cols, compactType, droppingItem, layout, verticalCompact])
 
-  const onDragEnter = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (e: any): void => {
-      if (!isDraggableAndDroppable) return
-
-      e.preventDefault()
-      e.stopPropagation()
-
-      dragEnterCounter.current++
-    },
-    [isDraggableAndDroppable]
-  )
-
-  const onDragOver = useCallback(
-    function (e: DragOverEvent): void | false {
+  const onDocumentDragOver = useCallback(
+    function (e: DragEvent): void | false {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
 
-      // we should ignore events from layout's children in Firefox
-      // to avoid unpredictable jumping of a dropping placeholder
-      // FIXME remove this hack
-      if (
-        isFirefox &&
-        !(e.nativeEvent.target as HTMLElement).classList.contains(layoutClassName)
-      ) {
-        return false
+      const mouseXY = {
+        x: e.clientX,
+        y: e.clientY,
       }
 
-      const onDragOverResult = onDropDragOver?.(e)
-
-      if (onDragOverResult === false) {
-        if (droppingDOMNode) {
-          removeDroppingPlaceholder()
-        }
-        return false
-      }
-
-      const finalDroppingItem = { ...droppingItem!, ...onDragOverResult }
-
-      // This is relative to the DOM element that this event fired for.
-      const { layerX, layerY } = e.nativeEvent
+      const gridRect = gridLayoutRef.current!.getBoundingClientRect()
+      const isMouseInGrid = mouseInGrid(mouseXY, gridLayoutRef.current!)
 
       const newDroppingPosition = {
-        top: layerY / transformScale - finalDroppingItem.offsetY,
-        left: layerX / transformScale - finalDroppingItem.offsetX,
+        top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
+        left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
         e,
       }
 
-      if (!droppingDOMNode) {
+      if (isMouseInGrid && !droppingDOMNode) {
         const positionParams: PositionParams = {
           cols,
           margin,
@@ -536,49 +504,62 @@ function GridLayout(props: Props) {
           positionParams,
           newDroppingPosition.top,
           newDroppingPosition.left,
-          finalDroppingItem.w,
-          finalDroppingItem.h
+          droppingItem!.w,
+          droppingItem!.h
         )
 
-        setDroppingDOMNode(<div key={finalDroppingItem.i} />)
-        setDroppingPosition(newDroppingPosition)
-        setLayout([
-          ...layout,
-          {
-            ...finalDroppingItem,
-            x: calculatedPosition.x,
-            y: calculatedPosition.y,
-            static: false,
-            isDraggable: true,
-          },
-        ])
-      } else if (droppingPosition) {
-        const { left, top } = droppingPosition
-        const shouldUpdatePosition = left !== layerX || top !== layerY
+        const finalDroppingItem = {
+          ...droppingItem!,
+          ...calculatedPosition,
+        }
 
-        if (shouldUpdatePosition) {
+        const collisions = getAllCollisions(layout, finalDroppingItem)
+        const hasCollisions = collisions.length > 0
+
+        if (!hasCollisions) {
+          setDroppingDOMNode(<div key={finalDroppingItem.i} />)
           setDroppingPosition(newDroppingPosition)
+          setLayout([
+            ...layout,
+            {
+              ...finalDroppingItem,
+              x: calculatedPosition.x,
+              y: calculatedPosition.y,
+              static: false,
+              isDraggable: true,
+            },
+          ])
+        }
+      } else if (droppingPosition) {
+        if (isMouseInGrid) {
+          setDroppingPosition(newDroppingPosition)
+        } else {
+          removeDroppingPlaceholder()
+          const newLayout = layout.filter((item) => item.i !== droppingItem!.i)
+          setLayout(newLayout)
         }
       }
     },
-    [cols, containerPadding, droppingDOMNode, droppingItem, droppingPosition, height, isDraggableAndDroppable, layout, margin, onDropDragOver, removeDroppingPlaceholder, rows, transformScale, width]
+    [
+      cols,
+      containerPadding,
+      droppingDOMNode,
+      droppingItem,
+      droppingPosition,
+      height,
+      isDraggableAndDroppable,
+      layout,
+      margin,
+      removeDroppingPlaceholder,
+      rows,
+      width,
+    ]
   )
 
-  const onDragLeave = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function (e: any) {
-      if (!isDraggableAndDroppable) return
-
-      e.preventDefault() // Prevent any browser native action
-      e.stopPropagation()
-      dragEnterCounter.current--
-
-      if (dragEnterCounter.current === 0) {
-        removeDroppingPlaceholder()
-      }
-    },
-    [isDraggableAndDroppable, removeDroppingPlaceholder]
-  )
+  useEffect(() => {
+    document.addEventListener('dragover', onDocumentDragOver)
+    return () => document.removeEventListener('dragover', onDocumentDragOver)
+  }, [onDocumentDragOver])
 
   const onDrop = useCallback(
     function (e: Event) {
@@ -588,7 +569,6 @@ function GridLayout(props: Props) {
       e.stopPropagation()
 
       const item = layout.find((l) => l.i === droppingItem!.i)!
-      dragEnterCounter.current = 0
       removeDroppingPlaceholder()
 
       const drop = {
@@ -758,11 +738,9 @@ function GridLayout(props: Props) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         onDrop={isDroppable ? onDrop : noop}
-        onDragEnter={isDroppable ? onDragEnter : noop}
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         onDragOver={isDroppable ? onDragOver : noop}
-        onDragLeave={isDroppable ? onDragLeave : noop}
         className={mergedClassName}
         style={mergedStyle}
       >
@@ -777,9 +755,6 @@ function GridLayout(props: Props) {
       isDroppable,
       mergedClassName,
       mergedStyle,
-      onDragEnter,
-      onDragLeave,
-      onDragOver,
       onDrop,
       placeholder,
     ]

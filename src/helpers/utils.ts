@@ -72,6 +72,11 @@ export type EventCallback = (
 
 export type CompactType = 'horizontal' | 'vertical' | null
 
+export type MouseXY = {
+  x: number | null
+  y: number | null
+}
+
 export function getLayoutItem(layout: Layout, id: LayoutItemID) {
   for (let i = 0, len = layout.length; i < len; i++) {
     if (layout[i].i === id) return layout[i]
@@ -250,6 +255,23 @@ export function collides(l1: LayoutItem, l2: LayoutItem): boolean {
   if (l1.y + l1.h <= l2.y) return false // l1 is above l2
   if (l1.y >= l2.y + l2.h) return false // l1 is below l2
   return true // boxes overlap
+}
+
+export function mouseInGrid(mouseXY: MouseXY, grid: HTMLDivElement ) {
+  const gridRect = grid.getBoundingClientRect()
+
+  if (
+    mouseXY.x &&
+    mouseXY.y &&
+    mouseXY.x > gridRect.left &&
+    mouseXY.x < gridRect.right &&
+    mouseXY.y > gridRect.top &&
+    mouseXY.y < gridRect.bottom
+  ) {
+    return true
+  }
+
+  return false
 }
 
 export function getAllCollisions(
