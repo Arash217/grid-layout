@@ -16,7 +16,7 @@ import {
   LayoutItem,
   cloneLayoutItem,
   compact,
-  compactType as compactTypeFn,
+  getCompactType,
   getLayoutItem,
   moveElement,
   noop,
@@ -212,7 +212,7 @@ function GridLayout(props: Props) {
         y,
         isUserAction,
         preventCollision,
-        compactTypeFn({
+        getCompactType({
           verticalCompact,
           compactType,
         }),
@@ -227,7 +227,7 @@ function GridLayout(props: Props) {
           ? newLayout
           : compact(
               newLayout,
-              compactTypeFn({
+              getCompactType({
                 verticalCompact,
                 compactType,
               }),
@@ -281,7 +281,7 @@ function GridLayout(props: Props) {
         y,
         isUserAction,
         preventCollision,
-        compactTypeFn({
+        getCompactType({
           verticalCompact,
           compactType,
         }),
@@ -293,7 +293,7 @@ function GridLayout(props: Props) {
         ? layout
         : compact(
             layout,
-            compactTypeFn({
+            getCompactType({
               verticalCompact,
               compactType,
             }),
@@ -395,7 +395,7 @@ function GridLayout(props: Props) {
           ? newLayout
           : compact(
               newLayout,
-              compactTypeFn({ verticalCompact, compactType }),
+              getCompactType({ verticalCompact, compactType }),
               cols,
               undefined
             )
@@ -428,7 +428,7 @@ function GridLayout(props: Props) {
         ? layout
         : compact(
             layout,
-            compactTypeFn({ compactType, verticalCompact }),
+            getCompactType({ compactType, verticalCompact }),
             cols,
             undefined
           )
@@ -458,7 +458,7 @@ function GridLayout(props: Props) {
   const removeDroppingPlaceholder = useCallback((): void => {
     const newLayout = compact(
       layout.filter((l) => l.i !== droppingItem!.i),
-      compactTypeFn({
+      getCompactType({
         compactType,
         verticalCompact,
       }),

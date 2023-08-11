@@ -492,7 +492,7 @@ export function cloneLayoutItem(layoutItem: LayoutItem): LayoutItem {
   }
 }
 
-export function compactType(props: {
+export function getCompactType(props: {
   verticalCompact: boolean
   compactType: CompactType
 }): CompactType {
