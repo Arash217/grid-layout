@@ -1,18 +1,24 @@
-import React, { ReactElement, useMemo, useState, useRef, CSSProperties } from 'react'
+import React, {
+  ReactElement,
+  useMemo,
+  useState,
+  useRef,
+  CSSProperties,
+} from 'react'
 import ReactDOM from 'react-dom'
-import {
-  DraggableCore,
-  DraggableData,
-  DraggableEvent,
-} from 'react-draggable'
+import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable'
 import {
   DroppableEventCallback,
   getTranslatePosition,
 } from '../../helpers/utils'
 import { getOffset, getRelativePosition } from '../../helpers/calculateUtils'
 
+import clsx from 'clsx'
+import { styled } from '@linaria/react'
+
 export type Props = {
   children: ReactElement | ReactElement[]
+  className?: string
   container: HTMLElement
   columnWidth: number
   rowHeight: number
@@ -23,8 +29,8 @@ export type Props = {
   onDrop?: DroppableEventCallback
 }
 
-export function DroppableItem(props: Props) {
-  const { children, columnWidth, rowHeight, width, height } = props
+function DroppableItem(props: Props) {
+  const { className, children, columnWidth, rowHeight, width, height } = props
 
   const child = useMemo(() => React.Children.only(children), [children])
   const itemRef = React.useRef(null)
@@ -37,9 +43,15 @@ export function DroppableItem(props: Props) {
     height: `${rowHeight * height}px`,
   }
 
+  const mergedClassName = useMemo(
+    () => clsx(child.props.className, className),
+    [child.props.className, className]
+  )
+
   const newChild = React.cloneElement(child, {
     ref: itemRef,
-    style
+    style,
+    className: mergedClassName,
   })
 
   function onStart(e: DraggableEvent, data: DraggableData) {
@@ -55,6 +67,7 @@ export function DroppableItem(props: Props) {
 
     const newChild = React.cloneElement(child, {
       ref: droppableItemRef,
+      className: mergedClassName,
       style: {
         ...style,
         opacity: 0.7,
@@ -117,3 +130,9 @@ export function DroppableItem(props: Props) {
     </>
   )
 }
+
+const StyledDroppableItem = styled(DroppableItem)`
+  cursor: grab;
+`
+
+export { StyledDroppableItem as DroppableItem }

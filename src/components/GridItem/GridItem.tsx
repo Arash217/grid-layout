@@ -104,10 +104,9 @@ export type Props = {
   onResizeStop?: GridItemCallback<GridResizeEvent>
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
-function usePrevious(value) {
-  const ref = useRef(value)
+
+function usePrevious<T>(value: T) {
+  const ref = useRef<T>(value)
 
   useEffect(() => {
     ref.current = value
@@ -218,7 +217,7 @@ function GridItem(props: Props) {
   )
 
   const onDragStart = useCallback(
-    function (e: Event, { node }: ReactDraggableCallbackData): void {
+    (e: Event, { node }: ReactDraggableCallbackData) => {
       const { onDragStart, transformScale } = props
       if (!onDragStart) return
 
@@ -275,10 +274,7 @@ function GridItem(props: Props) {
   )
 
   const onDrag = useCallback(
-    function (
-      e: Event,
-      { node, deltaX, deltaY }: ReactDraggableCallbackData
-    ): void {
+    (e: Event, { node, deltaX, deltaY }: ReactDraggableCallbackData) => {
       const { onDrag } = props
       if (!onDrag) return
 
@@ -334,7 +330,7 @@ function GridItem(props: Props) {
   )
 
   const onDragStop = useCallback(
-    function (e: Event, { node }: ReactDraggableCallbackData) {
+    (e: Event, { node }: ReactDraggableCallbackData) => {
       const { onDragStop } = props
       if (!onDragStop) return
 
@@ -381,11 +377,11 @@ function GridItem(props: Props) {
   )
 
   const onResizeHandler = useCallback(
-    function (
+    (
       e: Event,
       { node, size }: { node: HTMLElement; size: Position },
       handlerName: string
-    ): void {
+    ) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       const handler = props[handlerName]
@@ -437,10 +433,7 @@ function GridItem(props: Props) {
   )
 
   const onResizeStart = useCallback(
-    function (
-      e: Event,
-      callbackData: { node: HTMLElement; size: Position }
-    ): void {
+    (e: Event, callbackData: { node: HTMLElement; size: Position }) => {
       e.stopPropagation()
       onResizeHandler(e, callbackData, 'onResizeStart')
     },
@@ -448,67 +441,64 @@ function GridItem(props: Props) {
   )
 
   const onResize = useCallback(
-    function (e: Event, callbackData: { node: HTMLElement; size: Position }) {
+    (e: Event, callbackData: { node: HTMLElement; size: Position }) => {
       onResizeHandler(e, callbackData, 'onResize')
     },
     [onResizeHandler]
   )
 
   const onResizeStop = useCallback(
-    function (e: Event, callbackData: { node: HTMLElement; size: Position }) {
+    (e: Event, callbackData: { node: HTMLElement; size: Position }) => {
       onResizeHandler(e, callbackData, 'onResizeStop')
     },
     [onResizeHandler]
   )
 
-  const moveDroppingItem = useCallback(
-    function () {
-      if (!droppingPosition) return
-      const node = elementRef.current
-      // Can't find DOM node (are we unmounted?)
-      if (!node) return
+  const moveDroppingItem = useCallback(() => {
+    if (!droppingPosition) return
+    const node = elementRef.current
+    // Can't find DOM node (are we unmounted?)
+    if (!node) return
 
-      const prevDroppingPosition = prevProps.droppingPosition || {
-        left: 0,
-        top: 0,
-      }
+    const prevDroppingPosition = prevProps.droppingPosition || {
+      left: 0,
+      top: 0,
+    }
 
-      const shouldDrag =
-        (dragging && droppingPosition.left !== prevDroppingPosition.left) ||
-        droppingPosition.top !== prevDroppingPosition.top
+    const shouldDrag =
+      (dragging && droppingPosition.left !== prevDroppingPosition.left) ||
+      droppingPosition.top !== prevDroppingPosition.top
 
-      if (!dragging) {
-        onDragStart(droppingPosition.e, {
-          node,
-          deltaX: droppingPosition.left,
-          deltaY: droppingPosition.top,
-        })
-      } else if (shouldDrag) {
-        const deltaX = droppingPosition.left - dragging.left
-        const deltaY = droppingPosition.top - dragging.top
+    if (!dragging) {
+      onDragStart(droppingPosition.e, {
+        node,
+        deltaX: droppingPosition.left,
+        deltaY: droppingPosition.top,
+      })
+    } else if (shouldDrag) {
+      const deltaX = droppingPosition.left - dragging.left
+      const deltaY = droppingPosition.top - dragging.top
 
-        onDrag(droppingPosition.e, {
-          node,
-          deltaX,
-          deltaY,
-        })
-      }
-    },
-    [
-      dragging,
-      droppingPosition,
-      onDrag,
-      onDragStart,
-      prevProps.droppingPosition,
-    ]
-  )
+      onDrag(droppingPosition.e, {
+        node,
+        deltaX,
+        deltaY,
+      })
+    }
+  }, [
+    dragging,
+    droppingPosition,
+    onDrag,
+    onDragStart,
+    prevProps.droppingPosition,
+  ])
 
   useEffect(() => {
     moveDroppingItem()
   }, [moveDroppingItem])
 
   const mixinDraggable = useCallback(
-    function (child: ReactElement, isDraggable: boolean): ReactElement {
+    (child: ReactElement, isDraggable: boolean) => {
       return (
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
@@ -533,7 +523,7 @@ function GridItem(props: Props) {
   )
 
   const mixinResizable = useCallback(
-    function (child: ReactElement, position: Position, isResizable: boolean) {
+    (child: ReactElement, position: Position, isResizable: boolean) => {
       const positionParams = {
         cols,
         rows,
@@ -640,14 +630,25 @@ function GridItem(props: Props) {
     ]
   )
 
-  newChild = useMemo(
-    () => mixinResizable(newChild, pos, isResizable),
-    [isResizable, mixinResizable, newChild, pos]
+  const withStaticChild = useCallback(
+    (currentChild: ReactElement, newChildFn: () => ReactElement) => {
+      return props.static ? currentChild : newChildFn()
+    },
+    [props.static]
   )
 
   newChild = useMemo(
-    () => mixinDraggable(newChild, isDraggable),
-    [isDraggable, mixinDraggable, newChild]
+    () =>
+      withStaticChild(newChild, () =>
+        mixinResizable(newChild, pos, isResizable)
+      ),
+    [isResizable, mixinResizable, newChild, pos, withStaticChild]
+  )
+
+  newChild = useMemo(
+    () =>
+      withStaticChild(newChild, () => mixinDraggable(newChild, isDraggable)),
+    [isDraggable, mixinDraggable, newChild, withStaticChild]
   )
 
   return newChild
@@ -656,6 +657,7 @@ function GridItem(props: Props) {
 const StyledGridItem = styled(GridItem)`
   &.gl-grid-item-static {
     cursor: auto;
+    user-select: none;
   }
 
   &.gl-grid-item-draggable {
