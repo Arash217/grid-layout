@@ -27,6 +27,7 @@ import {
   DroppingItem,
   LayoutItemID,
   mouseInGrid,
+  DroppableEvent,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
@@ -469,16 +470,16 @@ function GridLayout(props: Props) {
     setDroppingPosition(undefined)
   }, [allowOverlap, cols, compactType, droppingItem, layout, verticalCompact])
 
-  const onDocumentDragOver = useCallback(
-    function (e: DragEvent): void | false {
+  const onDroppableDragOver = useCallback(
+    function (e: DroppableEvent): void | false {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
 
       const mouseXY = {
-        x: e.clientX,
-        y: e.clientY,
+        x: e.detail.x,
+        y: e.detail.y,
       }
 
       const gridRect = gridLayoutRef.current!.getBoundingClientRect()
@@ -487,7 +488,6 @@ function GridLayout(props: Props) {
       const newDroppingPosition = {
         top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
         left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
-        e,
       }
 
       if (isMouseInGrid && !droppingDOMNode) {
@@ -556,13 +556,9 @@ function GridLayout(props: Props) {
     ]
   )
 
-  useEffect(() => {
-    document.addEventListener('dragover', onDocumentDragOver)
-    return () => document.removeEventListener('dragover', onDocumentDragOver)
-  }, [onDocumentDragOver])
 
-  const onDrop = useCallback(
-    function (e: Event) {
+  const onDroppableDrop = useCallback(
+    function (e: DroppableEvent) {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault() // Prevent any browser native action
@@ -586,6 +582,16 @@ function GridLayout(props: Props) {
       removeDroppingPlaceholder,
     ]
   )
+
+  useEffect(() => {
+    document.addEventListener('droppable-dragover', onDroppableDragOver)
+    return () => document.removeEventListener('droppable-dragover', onDroppableDragOver)
+  }, [onDroppableDragOver])
+
+  useEffect(() => {
+    document.addEventListener('droppable-drop', onDroppableDrop)
+    return () => document.removeEventListener('droppable-drop', onDroppableDrop)
+  }, [onDroppableDrop])
 
   const placeholder = useCallback(
     function () {
@@ -737,10 +743,8 @@ function GridLayout(props: Props) {
         ref={gridLayoutRef}
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
-        onDrop={isDroppable ? onDrop : noop}
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        onDragOver={isDroppable ? onDragOver : noop}
+        
+        onDrop={isDroppable ? onDroppableDrop : noop}
         className={mergedClassName}
         style={mergedStyle}
       >
@@ -755,7 +759,7 @@ function GridLayout(props: Props) {
       isDroppable,
       mergedClassName,
       mergedStyle,
-      onDrop,
+      onDroppableDrop,
       placeholder,
     ]
   )

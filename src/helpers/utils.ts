@@ -1,3 +1,5 @@
+import { DraggableData } from 'react-draggable'
+
 export type ReactDraggableCallbackData = {
   node: HTMLElement
   x?: number
@@ -9,7 +11,7 @@ export type ReactDraggableCallbackData = {
 }
 
 export type PartialPosition = { left: number; top: number }
-export type DroppingPosition = { left: number; top: number; e: Event }
+export type DroppingPosition = { left: number; top: number }
 
 export type Size = { width: number; height: number }
 export type GridDragEvent = {
@@ -21,10 +23,10 @@ export type GridResizeEvent = { e: Event; node: HTMLElement; size: Size }
 
 export type DragOverEvent = MouseEvent & {
   nativeEvent: {
-    layerX: number,
-    layerY: number,
+    layerX: number
+    layerY: number
   } & Event
-};
+}
 
 export type UUID = ReturnType<typeof crypto.randomUUID>
 export type LayoutItemID = UUID | string
@@ -69,6 +71,8 @@ export type EventCallback = (
   placeholder?: LayoutItem | null,
   node?: HTMLElement
 ) => void
+
+export type DroppableEvent = CustomEvent<DraggableData>
 
 export type CompactType = 'horizontal' | 'vertical' | null
 
@@ -257,7 +261,7 @@ export function collides(l1: LayoutItem, l2: LayoutItem): boolean {
   return true // boxes overlap
 }
 
-export function mouseInGrid(mouseXY: MouseXY, grid: HTMLDivElement ) {
+export function mouseInGrid(mouseXY: MouseXY, grid: HTMLDivElement) {
   const gridRect = grid.getBoundingClientRect()
 
   if (
@@ -466,17 +470,17 @@ export function bottom(layout: Layout): number {
 }
 
 export function modifyLayout(layout: Layout, layoutItem: LayoutItem): Layout {
-  const newLayout = Array(layout.length);
+  const newLayout = Array(layout.length)
 
   for (let i = 0, len = layout.length; i < len; i++) {
     if (layoutItem.i === layout[i].i) {
-      newLayout[i] = layoutItem;
+      newLayout[i] = layoutItem
     } else {
-      newLayout[i] = layout[i];
+      newLayout[i] = layout[i]
     }
   }
 
-  return newLayout;
+  return newLayout
 }
 
 export function withLayoutItem(

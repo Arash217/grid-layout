@@ -189,8 +189,7 @@ function GridItem(props: Props) {
     ]
   )
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const child = useMemo(() => React.Children.only(children), [children]) as any
+  const child = useMemo(() => React.Children.only(children), [children])
 
   const createStyle = useCallback(
     function (pos: Position): { [key: string]: string } {

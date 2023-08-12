@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
 import { FlexibleItem } from './components/FlexibleItem'
+import { DroppableItem } from './components/DroppableItem'
 import { DataType, testLayout } from './data'
 
 import { css } from '@linaria/core'
@@ -48,7 +49,7 @@ function App() {
   const [droppingItem, setDroppingItem] = useState<DroppingItem | undefined>()
 
   function handleDrop(layout: Layout) {
-    setLayout([...layout as DataType])
+    setLayout([...(layout as DataType)])
     setDroppingItem(undefined)
   }
 
@@ -104,29 +105,26 @@ function App() {
         width={item.w}
         height={item.h}
       >
-        <div
-          className="droppable-element"
-          draggable={true}
-          unselectable="on"
-          // this is a hack for firefox
-          // Firefox requires some kind of initialization
-          // which we can do by adding this attribute
-          // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
-          onDragStart={(e) => { 
-            e.dataTransfer.setData('text/plain', '')
+        <DroppableItem
+          onDragStart={(_, data) => {
+            const rect = data.node.getBoundingClientRect()
+            const x = data.x - rect.left;
+            const y = data.y - rect.top;
 
             const droppingItem = {
               ...item,
               i: crypto.randomUUID(),
-              offsetX: e.nativeEvent.offsetX,
-              offsetY: e.nativeEvent.offsetY
+              offsetX: x,
+              offsetY: y,
             }
+
+            console.log(_)
 
             setDroppingItem(droppingItem)
           }}
         >
-          Droppable Element (Drag me!)
-        </div>
+          <div className="droppable-element">Droppable Element (Drag me!)</div>
+        </DroppableItem>
       </FlexibleItem>
     ))
   }, [columnWidth, rowHeight])
@@ -171,7 +169,12 @@ function App() {
         <button click="zoom(-0.25)">Zoom out</button>
         <button click="resetView('instant')">Reset view</button> */}
       </div>
-      <GridLayout layout={layout} droppingItem={droppingItem} onDrop={handleDrop} {...state}>
+      <GridLayout
+        layout={layout}
+        droppingItem={droppingItem}
+        onDrop={handleDrop}
+        {...state}
+      >
         {generatedDOM}
       </GridLayout>
     </div>
