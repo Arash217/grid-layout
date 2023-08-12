@@ -72,7 +72,10 @@ export type EventCallback = (
   node?: HTMLElement
 ) => void
 
-export type DroppableEventCallback = (e: DraggableEventHandler, data: DraggableData) => void
+export type DroppableEventCallback = (
+  e: DraggableEventHandler,
+  data: DraggableData
+) => void
 
 export type DroppableEvent = CustomEvent<DraggableData>
 
@@ -533,3 +536,5 @@ export function getCompactType(props: {
 }
 
 export const noop = () => {}
+
+export const LIB_PREFIX = 'gl'

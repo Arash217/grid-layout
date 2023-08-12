@@ -32,7 +32,11 @@ import {
   GridResizeEvent,
   DroppingPosition,
   LayoutItemID,
+  LIB_PREFIX,
 } from '../../helpers/utils'
+
+const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-item`
+const COMPONENT_CSS_PREFIX = `${COMPONENT_PREFIX}-`
 
 type GridItemCallback<Data extends GridDragEvent | GridResizeEvent> = (
   i: LayoutItemID,
@@ -606,13 +610,13 @@ function GridItem(props: Props) {
     () =>
       React.cloneElement(child, {
         ref: elementRef,
-        className: clsx('gl-grid-item', child.props.className, className, {
-          'gl-grid-item-static': props.static,
-          'gl-grid-item-resizing': Boolean(resizing),
-          'gl-grid-item-draggable': isDraggable,
-          'react-draggable-dragging': Boolean(dragging),
-          'gl-grid-item-dropping': Boolean(droppingPosition),
-          cssTransforms: useCSSTransforms,
+        className: clsx(COMPONENT_PREFIX, child.props.className, className, {
+          [`${COMPONENT_CSS_PREFIX}static`]: props.static,
+          [`${COMPONENT_CSS_PREFIX}resizing`]: Boolean(resizing),
+          [`${COMPONENT_CSS_PREFIX}draggable`]: isDraggable,
+          [`${COMPONENT_CSS_PREFIX}dragging`]: Boolean(dragging),
+          [`${COMPONENT_CSS_PREFIX}dropping`]: Boolean(droppingPosition),
+          [`${COMPONENT_CSS_PREFIX}css-transforms`]: useCSSTransforms,
         }),
         // We can set the width and height on the child, but unfortunately we can't set the position.
         style: {
@@ -621,7 +625,19 @@ function GridItem(props: Props) {
           ...createStyle(pos),
         },
       }),
-    [child, className, createStyle, dragging, droppingPosition, isDraggable, pos, props.static, resizing, style, useCSSTransforms]
+    [
+      child,
+      className,
+      createStyle,
+      dragging,
+      droppingPosition,
+      isDraggable,
+      pos,
+      props.static,
+      resizing,
+      style,
+      useCSSTransforms,
+    ]
   )
 
   newChild = useMemo(
@@ -648,6 +664,10 @@ const StyledGridItem = styled(GridItem)`
 
   &.gl-grid-item-resizing {
     opacity: 0.7;
+  }
+
+  &.gl-grid-item-dragging {
+    z-index: 1;
   }
 
   &.gl-grid-item-dropping {

@@ -28,6 +28,7 @@ import {
   LayoutItemID,
   mouseInGrid,
   DroppableEvent,
+  LIB_PREFIX,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
@@ -36,7 +37,8 @@ import clsx from 'clsx'
 import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
 import { PositionParams, calcXY } from '../../helpers/calculateUtils'
 
-const layoutClassName = 'react-grid-layout'
+const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-layout`
+const COMPONENT_CSS_PREFIX = `${COMPONENT_PREFIX}-`
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -142,11 +144,6 @@ function GridLayout(props: Props) {
   useEffect(() => {
     setLayout(initialLayout)
   }, [initialLayout])
-
-  const mergedClassName = useMemo(
-    () => clsx(layoutClassName, className, { 'grid-lines': showGridLines }),
-    [className, showGridLines]
-  )
 
   const mergedStyle: React.CSSProperties = useMemo(() => {
     return {
@@ -785,14 +782,18 @@ function GridLayout(props: Props) {
     [droppingDOMNode, isDroppable, processGridItem]
   )
 
+  const mergedClassName = useMemo(
+    () =>
+      clsx(COMPONENT_PREFIX, className, {
+        [`${COMPONENT_CSS_PREFIX}grid-lines`]: showGridLines,
+      }),
+    [className, showGridLines]
+  )
+
   const gridLayout = useMemo(
     () => (
       <div
         ref={gridLayoutRef}
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-
-        onDrop={isDroppable ? onDroppableDrop : noop}
         className={mergedClassName}
         style={mergedStyle}
       >
@@ -801,22 +802,14 @@ function GridLayout(props: Props) {
         {gridItems}
       </div>
     ),
-    [
-      drop,
-      gridItems,
-      isDroppable,
-      mergedClassName,
-      mergedStyle,
-      onDroppableDrop,
-      placeholder,
-    ]
+    [drop, gridItems, mergedClassName, mergedStyle, placeholder]
   )
 
   return gridLayout
 }
 
 const StyledGridLayout = styled(GridLayout)`
-  &.grid-lines {
+  &.gl-grid-layout-grid-lines {
     position: relative;
     &::before {
       content: '';

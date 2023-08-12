@@ -57,7 +57,7 @@ export function DroppableItem(props: Props) {
       ref: droppableItemRef,
       style: {
         ...style,
-        opacity: 0.5,
+        opacity: 0.7,
         position: 'absolute',
         top: 0,
         left: 0,
@@ -75,7 +75,7 @@ export function DroppableItem(props: Props) {
 
     const left = data.x + window.scrollX - x
     const top = data.y + window.scrollY - y
-    
+
     const position = getTranslatePosition(left, top)
 
     const newChild = React.cloneElement(droppableItem!, {
