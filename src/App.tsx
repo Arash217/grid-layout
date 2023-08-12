@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
-import { FlexibleItem } from './components/FlexibleItem'
 import { DroppableItem } from './components/DroppableItem'
 import { DataType, testLayout } from './data'
 
@@ -25,7 +24,6 @@ css`
     }
     .droppable-element {
       background: pink;
-      height: 100%;
     }
   }
 `
@@ -99,31 +97,28 @@ function App() {
 
   const generateAvailableWidgets = useCallback(() => {
     return testLayout.map((item) => (
-      <FlexibleItem
+      <DroppableItem
         key={item.i}
+        container={document.body}
         columnWidth={columnWidth}
         rowHeight={rowHeight}
         width={item.w}
         height={item.h}
+        onDropStart={(_, data) => {
+          const { x, y } = getOffset(data)
+
+          const droppingItem = {
+            ...item,
+            i: crypto.randomUUID(),
+            offsetX: x,
+            offsetY: y,
+          }
+
+          setDroppingItem(droppingItem)
+        }}
       >
-        <DroppableItem
-          container={document.body}
-          onDropStart={(_, data) => {
-            const { x, y } = getOffset(data)
-
-            const droppingItem = {
-              ...item,
-              i: crypto.randomUUID(),
-              offsetX: x,
-              offsetY: y,
-            }
-
-            setDroppingItem(droppingItem)
-          }}
-        >
           <div className="droppable-element">Droppable Element (Drag me!)</div>
-        </DroppableItem>
-      </FlexibleItem>
+      </DroppableItem>
     ))
   }, [columnWidth, rowHeight])
 
@@ -162,11 +157,12 @@ function App() {
         />
         <label htmlFor="showGridLines">showGridLines</label>
 
-        <div className="available-widgets">{availableWidgets}</div>
+ 
         {/* <button click="zoom(0.25)">Zoom in</button>
         <button click="zoom(-0.25)">Zoom out</button>
         <button click="resetView('instant')">Reset view</button> */}
       </div>
+      <div className="available-widgets">{availableWidgets}</div>
       <GridLayout
         layout={layout}
         droppingItem={droppingItem}

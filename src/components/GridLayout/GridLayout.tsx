@@ -158,11 +158,6 @@ function GridLayout(props: Props) {
     }
   }, [width, height, style])
 
-  // function addDragOverEvent(e: DragEvent) {
-  //   mouseXY.current.x = e.clientX
-  //   mouseXY.current.y = e.clientY
-  // }
-
   const onDragStart = useCallback(
     function (
       i: LayoutItemID,
@@ -488,7 +483,7 @@ function GridLayout(props: Props) {
       const newDroppingPosition = {
         top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
         left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
-        e
+        e,
       }
 
       if (isMouseInGrid && !droppingDOMNode) {
@@ -557,36 +552,87 @@ function GridLayout(props: Props) {
     ]
   )
 
-
   const onDroppableDrop = useCallback(
     function (e: DroppableEvent) {
       if (!isDraggableAndDroppable) return
 
-      e.preventDefault() // Prevent any browser native action
+      e.preventDefault()
       e.stopPropagation()
 
-      const item = layout.find((l) => l.i === droppingItem!.i)!
-      removeDroppingPlaceholder()
-
-      const drop = {
-        ...item,
-        i: undefined,
+      const mouseXY = {
+        x: e.detail.x,
+        y: e.detail.y,
       }
 
-      onItemDrop(layout, drop, e)
+      const isMouseInGrid = mouseInGrid(mouseXY, gridLayoutRef.current!)
+
+      if (isMouseInGrid) {
+        const gridRect = gridLayoutRef.current!.getBoundingClientRect()
+
+        const newDroppingPosition = {
+          top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
+          left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
+          e,
+        }
+
+        const positionParams: PositionParams = {
+          cols,
+          margin,
+          rows,
+          containerHeight: height,
+          containerWidth: width,
+          containerPadding: containerPadding || margin,
+        }
+
+        const calculatedPosition = calcXY(
+          positionParams,
+          newDroppingPosition.top,
+          newDroppingPosition.left,
+          droppingItem!.w,
+          droppingItem!.h
+        )
+
+        const finalDroppingItem = {
+          ...droppingItem!,
+          ...calculatedPosition,
+        }
+
+        const collisions = getAllCollisions(layout, finalDroppingItem)
+        const hasCollisions = collisions.length > 0
+
+        if (!hasCollisions || droppingPosition !== undefined) {
+          const item = layout.find((l) => l.i === droppingItem!.i)!
+
+          const drop = {
+            ...item,
+            i: undefined,
+          }
+
+          onItemDrop(layout, drop, e)
+        }
+      }
+      removeDroppingPlaceholder()
     },
     [
+      cols,
+      containerPadding,
       droppingItem,
+      droppingPosition,
+      height,
       isDraggableAndDroppable,
       layout,
+      margin,
       onItemDrop,
       removeDroppingPlaceholder,
+      rows,
+      width,
     ]
   )
 
   useEffect(() => {
     document.addEventListener('droppable-dragover', onDroppableDragOver)
-    return () => document.removeEventListener('droppable-dragover', onDroppableDragOver)
+    return () =>
+      document.removeEventListener('droppable-dragover', onDroppableDragOver)
   }, [onDroppableDragOver])
 
   useEffect(() => {
@@ -744,7 +790,7 @@ function GridLayout(props: Props) {
         ref={gridLayoutRef}
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
-        
+
         onDrop={isDroppable ? onDroppableDrop : noop}
         className={mergedClassName}
         style={mergedStyle}

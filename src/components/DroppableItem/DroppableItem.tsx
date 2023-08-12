@@ -1,32 +1,45 @@
-import React, { ReactElement, useMemo, useState, useRef } from 'react'
+import React, { ReactElement, useMemo, useState, useRef, CSSProperties } from 'react'
 import ReactDOM from 'react-dom'
 import {
   DraggableCore,
   DraggableData,
   DraggableEventHandler,
 } from 'react-draggable'
-import { DroppableEventCallback, getTranslatePosition } from '../../helpers/utils'
+import {
+  DroppableEventCallback,
+  getTranslatePosition,
+} from '../../helpers/utils'
 import { getOffset, getRelativePosition } from '../../helpers/calculateUtils'
 
 export type Props = {
   children: ReactElement | ReactElement[]
   container: HTMLElement
+  columnWidth: number
+  rowHeight: number
+  width: number
+  height: number
   onDropStart?: DroppableEventCallback
   onDropDragOver?: DroppableEventCallback
   onDrop?: DroppableEventCallback
 }
 
 export function DroppableItem(props: Props) {
-  const { children } = props
+  const { children, columnWidth, rowHeight, width, height } = props
 
+  const child = useMemo(() => React.Children.only(children), [children])
   const itemRef = React.useRef(null)
   const droppableItemRef = useRef(null)
-  const child = useMemo(() => React.Children.only(children), [children])
   const [droppableItem, setDroppableItem] = useState<ReactElement | null>(null)
   const droppableItemOffset = useRef<{ x: number; y: number } | null>(null)
 
+  const style: CSSProperties = {
+    width: `${columnWidth * width}px`,
+    height: `${rowHeight * height}px`,
+  }
+
   const newChild = React.cloneElement(child, {
     ref: itemRef,
+    style
   })
 
   function onStart(e: DraggableEventHandler, data: DraggableData) {
@@ -43,10 +56,9 @@ export function DroppableItem(props: Props) {
     const newChild = React.cloneElement(child, {
       ref: droppableItemRef,
       style: {
+        ...style,
         opacity: 0.5,
         position: 'absolute',
-        height: data.node.clientHeight,
-        width: data.node.clientWidth,
         top: 0,
         left: 0,
         transform: position,
