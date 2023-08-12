@@ -1,3 +1,4 @@
+import { DraggableData } from 'react-draggable'
 import { Position } from './utils'
 
 export type PositionParams = {
@@ -129,4 +130,24 @@ export function clamp(
   upperBound: number
 ): number {
   return Math.max(Math.min(num, upperBound), lowerBound)
+}
+
+export function getRelativePosition(el: HTMLElement) {
+  const rect = el.getBoundingClientRect()
+
+  return {
+    left: rect.left + window.scrollX,
+    top: rect.top + window.scrollY,
+  }
+}
+
+export function getOffset(data: DraggableData) {
+  const rect = data.node.getBoundingClientRect()
+  const x = data.x - rect.left
+  const y = data.y - rect.top
+
+  return {
+    x,
+    y
+  }
 }

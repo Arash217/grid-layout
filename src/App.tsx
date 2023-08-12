@@ -6,6 +6,7 @@ import { DataType, testLayout } from './data'
 
 import { css } from '@linaria/core'
 import { DroppingItem, Layout } from './helpers/utils'
+import { getOffset } from './helpers/calculateUtils'
 
 // css`
 //   :global() {
@@ -106,10 +107,8 @@ function App() {
         height={item.h}
       >
         <DroppableItem
-          onDragStart={(_, data) => {
-            const rect = data.node.getBoundingClientRect()
-            const x = data.x - rect.left;
-            const y = data.y - rect.top;
+          onDropStart={(_, data) => {
+            const { x, y } = getOffset(data)
 
             const droppingItem = {
               ...item,
@@ -117,8 +116,6 @@ function App() {
               offsetX: x,
               offsetY: y,
             }
-
-            console.log(_)
 
             setDroppingItem(droppingItem)
           }}

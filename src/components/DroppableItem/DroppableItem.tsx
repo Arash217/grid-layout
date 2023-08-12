@@ -5,11 +5,14 @@ import {
   DraggableData,
   DraggableEventHandler,
 } from 'react-draggable'
+import { DroppableEventCallback } from '../../helpers/utils'
+import { getOffset, getRelativePosition } from '../../helpers/calculateUtils'
 
 export type Props = {
   children: ReactElement | ReactElement[]
-  onDragStart?: (e: DraggableEventHandler, data: DraggableData) => void
-  onDrag?: (e: DraggableEventHandler, data: DraggableData) => void
+  onDropStart?: DroppableEventCallback
+  onDropDragOver?: DroppableEventCallback
+  onDrop?: DroppableEventCallback
 }
 
 export function DroppableItem(props: Props) {
@@ -19,32 +22,21 @@ export function DroppableItem(props: Props) {
   const droppableItemRef = useRef(null)
   const child = useMemo(() => React.Children.only(children), [children])
   const [droppableItem, setDroppableItem] = useState<ReactElement | null>(null)
-  const droppableItemOffset = useRef<{ left: number; top: number } | null>(null)
+  const droppableItemOffset = useRef<{ x: number; y: number } | null>(null)
 
   const newChild = React.cloneElement(child, {
     ref: itemRef,
   })
 
-  function getOffset(el: HTMLElement) {
-    const rect = el.getBoundingClientRect()
-
-    return {
-      left: rect.left + window.scrollX,
-      top: rect.top + window.scrollY,
-    }
-  }
-
   function onStart(e: DraggableEventHandler, data: DraggableData) {
-    const { left, top } = getOffset(data.node)
-
-    const rect = data.node.getBoundingClientRect()
-    const x = data.x - rect.left
-    const y = data.y - rect.top
+   const { x, y } = getOffset(data)
 
     droppableItemOffset.current = {
-      left: x,
-      top: y,
+      x,
+      y,
     }
+
+    const { left, top } = getRelativePosition(data.node)
 
     const newChild = React.cloneElement(child, {
       ref: droppableItemRef,
@@ -60,18 +52,18 @@ export function DroppableItem(props: Props) {
 
     setDroppableItem(newChild)
 
-    props.onDragStart?.(e, data)
+    props.onDropStart?.(e, data)
   }
 
   function onDrag(e: DraggableEventHandler, data: DraggableData) {
-    const { left, top } = droppableItemOffset.current!
+    const { x, y } = droppableItemOffset.current!
 
     const newChild = React.cloneElement(child, {
       ref: droppableItemRef,
       style: {
         opacity: 0.5,
-        left: data.x - left,
-        top: data.y - top,
+        left: data.x - x,
+        top: data.y - y,
         position: 'absolute',
         height: data.node.clientHeight,
         width: data.node.clientWidth,
@@ -83,7 +75,7 @@ export function DroppableItem(props: Props) {
     const event = new CustomEvent('droppable-dragover', { detail: data })
     document.dispatchEvent(event)
 
-    // props.onDrag?.(e, data)
+    props.onDropDragOver?.(e, data)
   }
 
   function onStop(e: DraggableEventHandler, data: DraggableData) {
@@ -91,6 +83,8 @@ export function DroppableItem(props: Props) {
 
     const event = new CustomEvent('droppable-drop', {  detail: data})
     document.dispatchEvent(event)
+
+    props.onDrop?.(e, data)
   }
 
   return (
@@ -106,7 +100,6 @@ export function DroppableItem(props: Props) {
         {newChild}
       </DraggableCore>
       {droppableItem && ReactDOM.createPortal(droppableItem, document.body)}
-      {/* {droppableItem && droppableItem} */}
     </>
   )
 }
