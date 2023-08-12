@@ -1,4 +1,4 @@
-import { DraggableData, DraggableEventHandler } from 'react-draggable'
+import { DraggableData, DraggableEvent } from 'react-draggable'
 
 export type ReactDraggableCallbackData = {
   node: HTMLElement
@@ -73,7 +73,7 @@ export type EventCallback = (
 ) => void
 
 export type DroppableEventCallback = (
-  e: DraggableEventHandler,
+  e: DraggableEvent,
   data: DraggableData
 ) => void
 

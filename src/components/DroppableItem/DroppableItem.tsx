@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import {
   DraggableCore,
   DraggableData,
-  DraggableEventHandler,
+  DraggableEvent,
 } from 'react-draggable'
 import {
   DroppableEventCallback,
@@ -42,7 +42,7 @@ export function DroppableItem(props: Props) {
     style
   })
 
-  function onStart(e: DraggableEventHandler, data: DraggableData) {
+  function onStart(e: DraggableEvent, data: DraggableData) {
     const { x, y } = getOffset(data)
 
     droppableItemOffset.current = {
@@ -70,7 +70,7 @@ export function DroppableItem(props: Props) {
     props.onDropStart?.(e, data)
   }
 
-  function onDrag(e: DraggableEventHandler, data: DraggableData) {
+  function onDrag(e: DraggableEvent, data: DraggableData) {
     const { x, y } = droppableItemOffset.current!
 
     const left = data.x + window.scrollX - x
@@ -94,7 +94,7 @@ export function DroppableItem(props: Props) {
     props.onDropDragOver?.(e, data)
   }
 
-  function onStop(e: DraggableEventHandler, data: DraggableData) {
+  function onStop(e: DraggableEvent, data: DraggableData) {
     setDroppableItem(null)
 
     const event = new CustomEvent('droppable-drop', { detail: data })
@@ -105,8 +105,6 @@ export function DroppableItem(props: Props) {
 
   return (
     <>
-      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-      {/* @ts-ignore */}
       <DraggableCore
         onStart={onStart}
         onDrag={onDrag}
