@@ -7,15 +7,6 @@ import { css } from '@linaria/core'
 import { DroppingItem, Layout } from './helpers/utils'
 import { getOffset } from './helpers/calculateUtils'
 
-// css`
-//   :global() {
-//     html, body, #root {
-//       width: 100%;
-//       height: 100%;
-//     }
-//   }
-// `
-
 css`
   :global() {
     .available-widgets {
@@ -156,11 +147,6 @@ function App() {
           }
         />
         <label htmlFor="showGridLines">showGridLines</label>
-
- 
-        {/* <button click="zoom(0.25)">Zoom in</button>
-        <button click="zoom(-0.25)">Zoom out</button>
-        <button click="resetView('instant')">Reset view</button> */}
       </div>
       <div className="available-widgets">{availableWidgets}</div>
       <GridLayout
