@@ -156,12 +156,7 @@ function GridLayout(props: Props) {
   }, [width, height, style])
 
   const onDragStart = useCallback(
-    function (
-      i: LayoutItemID,
-      _x: number,
-      _y: number,
-      { e, node }: GridDragEvent
-    ): void {
+    (i: LayoutItemID, _x: number, _y: number, { e, node }: GridDragEvent) => {
       const l = getLayoutItem(layout, i)
       if (!l) return
 
@@ -174,12 +169,7 @@ function GridLayout(props: Props) {
   )
 
   const onDrag = useCallback(
-    function (
-      i: LayoutItemID,
-      x: number,
-      y: number,
-      { e, node }: GridDragEvent
-    ): void {
+    (i: LayoutItemID, x: number, y: number, { e, node }: GridDragEvent) => {
       const l = getLayoutItem(layout, i)
       if (!l) return
 
@@ -241,7 +231,7 @@ function GridLayout(props: Props) {
   )
 
   const onLayoutMaybeChanged = useCallback(
-    function (newLayout: Layout, oldLayout: Layout | null) {
+    (newLayout: Layout, oldLayout: Layout | null) => {
       if (!oldLayout) oldLayout = layout
 
       if (!deepEqual(oldLayout, newLayout)) {
@@ -252,12 +242,7 @@ function GridLayout(props: Props) {
   )
 
   const onDragStop = useCallback(
-    function (
-      i: LayoutItemID,
-      x: number,
-      y: number,
-      { e, node }: GridDragEvent
-    ): void {
+    (i: LayoutItemID, x: number, y: number, { e, node }: GridDragEvent) => {
       if (!activeDrag) return
 
       const l = getLayoutItem(layout, i)
@@ -316,12 +301,7 @@ function GridLayout(props: Props) {
   )
 
   const onResizeStart = useCallback(
-    function (
-      i: LayoutItemID,
-      _w: number,
-      _h: number,
-      { e, node }: GridResizeEvent
-    ): void {
+    (i: LayoutItemID, _w: number, _h: number, { e, node }: GridResizeEvent) => {
       const l = getLayoutItem(layout, i)
       if (!l) return
 
@@ -334,12 +314,7 @@ function GridLayout(props: Props) {
   )
 
   const onResize = useCallback(
-    function (
-      i: LayoutItemID,
-      w: number,
-      h: number,
-      { e, node }: GridResizeEvent
-    ): void {
+    (i: LayoutItemID, w: number, h: number, { e, node }: GridResizeEvent) => {
       const [newLayout, l] = withLayoutItem(layout, i, (l) => {
         // Something like quad tree should be used
         // to find collisions faster
@@ -406,12 +381,7 @@ function GridLayout(props: Props) {
   )
 
   const onResizeStop = useCallback(
-    function (
-      i: LayoutItemID,
-      _w: number,
-      _h: number,
-      { e, node }: GridResizeEvent
-    ): void {
+    (i: LayoutItemID, _w: number, _h: number, { e, node }: GridResizeEvent) => {
       const l = getLayoutItem(layout, i)
 
       const newLayout = allowOverlap
@@ -445,7 +415,7 @@ function GridLayout(props: Props) {
     ]
   )
 
-  const removeDroppingPlaceholder = useCallback((): void => {
+  const removeDroppingPlaceholder = useCallback(() => {
     const newLayout = compact(
       layout.filter((l) => l.i !== droppingItem!.i),
       getCompactType({
@@ -463,7 +433,7 @@ function GridLayout(props: Props) {
   }, [allowOverlap, cols, compactType, droppingItem, layout, verticalCompact])
 
   const onDroppableDragOver = useCallback(
-    function (e: DroppableEvent): void | false {
+    (e: DroppableEvent) => {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault() // Prevent any browser native action
@@ -551,7 +521,7 @@ function GridLayout(props: Props) {
   )
 
   const onDroppableDrop = useCallback(
-    function (e: DroppableEvent) {
+    (e: DroppableEvent) => {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault()
@@ -638,55 +608,52 @@ function GridLayout(props: Props) {
     return () => document.removeEventListener('droppable-drop', onDroppableDrop)
   }, [onDroppableDrop])
 
-  const placeholder = useCallback(
-    function () {
-      if (!activeDrag) return null
+  const placeholder = useCallback(() => {
+    if (!activeDrag) return null
 
-      return (
-        <GridItem
-          style={{
-            background: 'green',
-            opacity: '0.3',
-            transitionProperty: 'transform, width, height',
-            transitionDuration: '100ms',
-          }}
-          w={activeDrag.w}
-          h={activeDrag.h}
-          x={activeDrag.x}
-          y={activeDrag.y}
-          i={activeDrag.i}
-          className="react-grid-placeholder"
-          containerWidth={width}
-          containerHeight={height}
-          cols={cols}
-          rows={rows}
-          margin={margin}
-          containerPadding={containerPadding || margin}
-          isDraggable={false}
-          isResizable={false}
-          isBounded={false}
-          useCSSTransforms={useCSSTransforms}
-          transformScale={transformScale}
-        >
-          <div />
-        </GridItem>
-      )
-    },
-    [
-      activeDrag,
-      cols,
-      containerPadding,
-      height,
-      margin,
-      rows,
-      transformScale,
-      useCSSTransforms,
-      width,
-    ]
-  )
+    return (
+      <GridItem
+        style={{
+          background: 'green',
+          opacity: '0.3',
+          transitionProperty: 'transform, width, height',
+          transitionDuration: '100ms',
+        }}
+        w={activeDrag.w}
+        h={activeDrag.h}
+        x={activeDrag.x}
+        y={activeDrag.y}
+        i={activeDrag.i}
+        className="react-grid-placeholder"
+        containerWidth={width}
+        containerHeight={height}
+        cols={cols}
+        rows={rows}
+        margin={margin}
+        containerPadding={containerPadding || margin}
+        isDraggable={false}
+        isResizable={false}
+        isBounded={false}
+        useCSSTransforms={useCSSTransforms}
+        transformScale={transformScale}
+      >
+        <div />
+      </GridItem>
+    )
+  }, [
+    activeDrag,
+    cols,
+    containerPadding,
+    height,
+    margin,
+    rows,
+    transformScale,
+    useCSSTransforms,
+    width,
+  ])
 
   const processGridItem = useCallback(
-    function (child: ReactElement, isDroppingItem?: boolean) {
+    (child: ReactElement, isDroppingItem?: boolean) => {
       if (!child || !child.key) return
 
       const l = getLayoutItem(layout, String(child.key))
@@ -792,11 +759,7 @@ function GridLayout(props: Props) {
 
   const gridLayout = useMemo(
     () => (
-      <div
-        ref={gridLayoutRef}
-        className={mergedClassName}
-        style={mergedStyle}
-      >
+      <div ref={gridLayoutRef} className={mergedClassName} style={mergedStyle}>
         {drop}
         {placeholder()}
         {gridItems}

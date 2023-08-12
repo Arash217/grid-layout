@@ -104,7 +104,6 @@ export type Props = {
   onResizeStop?: GridItemCallback<GridResizeEvent>
 }
 
-
 function usePrevious<T>(value: T) {
   const ref = useRef<T>(value)
 
@@ -498,12 +497,11 @@ function GridItem(props: Props) {
   }, [moveDroppingItem])
 
   const mixinDraggable = useCallback(
-    (child: ReactElement, isDraggable: boolean) => {
+    (child: ReactElement) => {
       return (
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         <DraggableCore
-          disabled={!isDraggable}
           onStart={onDragStart}
           onDrag={onDrag}
           onStop={onDragStop}
@@ -523,7 +521,7 @@ function GridItem(props: Props) {
   )
 
   const mixinResizable = useCallback(
-    (child: ReactElement, position: Position, isResizable: boolean) => {
+    (child: ReactElement, position: Position) => {
       const positionParams = {
         cols,
         rows,
@@ -556,10 +554,6 @@ function GridItem(props: Props) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         <Resizable
-          draggableOpts={{
-            disabled: !isResizable,
-          }}
-          className={isResizable ? undefined : 'react-resizable-hide'}
           width={position.width}
           height={position.height}
           minConstraints={minConstraints}
@@ -630,25 +624,14 @@ function GridItem(props: Props) {
     ]
   )
 
-  const withStaticChild = useCallback(
-    (currentChild: ReactElement, newChildFn: () => ReactElement) => {
-      return props.static ? currentChild : newChildFn()
-    },
-    [props.static]
+  newChild = useMemo(
+    () => (isResizable ? mixinResizable(newChild, pos) : newChild),
+    [isResizable, mixinResizable, newChild, pos]
   )
 
   newChild = useMemo(
-    () =>
-      withStaticChild(newChild, () =>
-        mixinResizable(newChild, pos, isResizable)
-      ),
-    [isResizable, mixinResizable, newChild, pos, withStaticChild]
-  )
-
-  newChild = useMemo(
-    () =>
-      withStaticChild(newChild, () => mixinDraggable(newChild, isDraggable)),
-    [isDraggable, mixinDraggable, newChild, withStaticChild]
+    () => (isDraggable ? mixinDraggable(newChild) : newChild),
+    [isDraggable, mixinDraggable, newChild]
   )
 
   return newChild
