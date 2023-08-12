@@ -606,12 +606,12 @@ function GridItem(props: Props) {
     () =>
       React.cloneElement(child, {
         ref: elementRef,
-        className: clsx('react-grid-item', child.props.className, className, {
-          static: props.static,
-          resizing: Boolean(resizing),
-          // "react-draggable": isDraggable,
+        className: clsx('gl-grid-item', child.props.className, className, {
+          'gl-grid-item-static': props.static,
+          'gl-grid-item-resizing': Boolean(resizing),
+          'gl-grid-item-draggable': isDraggable,
           'react-draggable-dragging': Boolean(dragging),
-          dropping: Boolean(droppingPosition),
+          'gl-grid-item-dropping': Boolean(droppingPosition),
           cssTransforms: useCSSTransforms,
         }),
         // We can set the width and height on the child, but unfortunately we can't set the position.
@@ -621,29 +621,14 @@ function GridItem(props: Props) {
           ...createStyle(pos),
         },
       }),
-    [
-      child,
-      className,
-      createStyle,
-      dragging,
-      droppingPosition,
-      pos,
-      props.static,
-      resizing,
-      style,
-      useCSSTransforms,
-    ]
+    [child, className, createStyle, dragging, droppingPosition, isDraggable, pos, props.static, resizing, style, useCSSTransforms]
   )
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //@ts-ignore
   newChild = useMemo(
     () => mixinResizable(newChild, pos, isResizable),
     [isResizable, mixinResizable, newChild, pos]
   )
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //@ts-ignore
   newChild = useMemo(
     () => mixinDraggable(newChild, isDraggable),
     [isDraggable, mixinDraggable, newChild]
@@ -653,11 +638,19 @@ function GridItem(props: Props) {
 }
 
 const StyledGridItem = styled(GridItem)`
-  &.resizing {
+  &.gl-grid-item-static {
+    cursor: auto;
+  }
+
+  &.gl-grid-item-draggable {
+    cursor: move;
+  }
+
+  &.gl-grid-item-resizing {
     opacity: 0.7;
   }
 
-  &.dropping {
+  &.gl-grid-item-dropping {
     visibility: hidden;
   }
 `

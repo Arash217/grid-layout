@@ -73,7 +73,10 @@ export function DroppableItem(props: Props) {
   function onDrag(e: DraggableEventHandler, data: DraggableData) {
     const { x, y } = droppableItemOffset.current!
 
-    const position = getTranslatePosition(data.x - x, data.y - y)
+    const left = data.x + window.scrollX - x
+    const top = data.y + window.scrollY - y
+    
+    const position = getTranslatePosition(left, top)
 
     const newChild = React.cloneElement(droppableItem!, {
       ref: droppableItemRef,

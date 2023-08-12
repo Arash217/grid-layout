@@ -477,8 +477,9 @@ function GridLayout(props: Props) {
         y: e.detail.y,
       }
 
-      const gridRect = gridLayoutRef.current!.getBoundingClientRect()
-      const isMouseInGrid = mouseInGrid(mouseXY, gridLayoutRef.current!)
+      const gridLayout = gridLayoutRef.current!
+      const gridRect = gridLayout.getBoundingClientRect()
+      const isMouseInGrid = mouseInGrid(mouseXY, gridLayout)
 
       const newDroppingPosition = {
         top: mouseXY.y - droppingItem!.offsetY - gridRect.top,

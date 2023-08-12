@@ -135,14 +135,18 @@ export function clamp(
 export function getRelativePosition(el: HTMLElement) {
   const rect = el.getBoundingClientRect()
 
+  const left = rect.left + window.scrollX
+  const top = rect.top + window.scrollY
+
   return {
-    left: rect.left + window.scrollX,
-    top: rect.top + window.scrollY,
+    left,
+    top
   }
 }
 
 export function getOffset(data: DraggableData) {
   const rect = data.node.getBoundingClientRect()
+
   const x = data.x - rect.left
   const y = data.y - rect.top
 
