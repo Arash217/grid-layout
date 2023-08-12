@@ -532,13 +532,13 @@ function GridItem(props: Props) {
       }
 
       // This is the max possible width - doesn't go to infinity because of the width of the window
-      const maxWidth = calcGridItemPosition(
+      const { width: maxWidth, height: maxHeight } = calcGridItemPosition(
         positionParams,
         0,
         0,
         cols - x,
-        0
-      ).width
+        rows - y
+      )
 
       // Calculate min/max constraints using our min & maxes
       const mins = calcGridItemPosition(positionParams, 0, 0, minW, minH)
@@ -547,7 +547,7 @@ function GridItem(props: Props) {
       const minConstraints: [number, number] = [mins.width, mins.height]
       const maxConstraints: [number, number] = [
         Math.min(maxes.width, maxWidth),
-        Math.min(maxes.height, Infinity),
+        Math.min(maxes.height, maxHeight),
       ]
 
       return (
@@ -587,6 +587,7 @@ function GridItem(props: Props) {
       rows,
       transformScale,
       x,
+      y,
     ]
   )
 
