@@ -11,7 +11,7 @@ export type ReactDraggableCallbackData = {
 }
 
 export type PartialPosition = { left: number; top: number }
-export type DroppingPosition = { left: number; top: number }
+export type DroppingPosition = { left: number; top: number; e: Event }
 
 export type Size = { width: number; height: number }
 export type GridDragEvent = {
@@ -438,8 +438,12 @@ export function perc(num: number): string {
   return num * 100 + '%'
 }
 
+export function getTranslatePosition(left: number, top: number) {
+  return `translate3d(${left}px, ${top}px, 0)`
+}
+
 export function setTransform({ top, left, width, height }: Position) {
-  const translate = `translate3d(${left}px, ${top}px, 0)`
+  const translate = getTranslatePosition(left, top)
 
   return {
     transform: translate,

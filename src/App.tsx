@@ -107,6 +107,7 @@ function App() {
         height={item.h}
       >
         <DroppableItem
+          container={document.body}
           onDropStart={(_, data) => {
             const { x, y } = getOffset(data)
 

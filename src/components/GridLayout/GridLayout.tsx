@@ -488,6 +488,7 @@ function GridLayout(props: Props) {
       const newDroppingPosition = {
         top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
         left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
+        e
       }
 
       if (isMouseInGrid && !droppingDOMNode) {
