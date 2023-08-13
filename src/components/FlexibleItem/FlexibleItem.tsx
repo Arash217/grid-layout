@@ -8,7 +8,23 @@ export type Props = {
   height: number
 }
 
-export const FlexibleItem = React.forwardRef((props: Props, ref) => {
+// export const FlexibleItem = React.forwardRef((props: Props, ref) => {
+//   const { columnWidth, rowHeight, width, height, children } = props
+
+//   const child = useMemo(() => React.Children.only(children), [children])
+
+//   const style: CSSProperties = {
+//     width: `${columnWidth * width}px`,
+//     height: `${rowHeight * height}px`,
+//   }
+
+//   return React.cloneElement(child, {
+//     ref,
+//     style
+//   })
+// })
+
+export const FlexibleItem = (props: Props) => {
   const { columnWidth, rowHeight, width, height, children } = props
 
   const child = useMemo(() => React.Children.only(children), [children])
@@ -19,7 +35,6 @@ export const FlexibleItem = React.forwardRef((props: Props, ref) => {
   }
 
   return React.cloneElement(child, {
-    ref,
     style
   })
-})
+}

@@ -3,7 +3,6 @@ import React, {
   useMemo,
   useState,
   useRef,
-  CSSProperties,
 } from 'react'
 import ReactDOM from 'react-dom'
 import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable'
@@ -20,17 +19,13 @@ export type Props = {
   children: ReactElement | ReactElement[]
   className?: string
   container: HTMLElement
-  columnWidth: number
-  rowHeight: number
-  width: number
-  height: number
   onDropStart?: DroppableEventCallback
   onDropDragOver?: DroppableEventCallback
   onDrop?: DroppableEventCallback
 }
 
 function DroppableItem(props: Props) {
-  const { className, children, columnWidth, rowHeight, width, height } = props
+  const { className, children } = props
 
   const child = useMemo(() => React.Children.only(children), [children])
   const itemRef = React.useRef(null)
@@ -38,21 +33,10 @@ function DroppableItem(props: Props) {
   const [droppableItem, setDroppableItem] = useState<ReactElement | null>(null)
   const droppableItemOffset = useRef<{ x: number; y: number } | null>(null)
 
-  const style: CSSProperties = {
-    width: `${columnWidth * width}px`,
-    height: `${rowHeight * height}px`,
-  }
-
   const mergedClassName = useMemo(
     () => clsx(child.props.className, className),
     [child.props.className, className]
   )
-
-  const newChild = React.cloneElement(child, {
-    ref: itemRef,
-    style,
-    className: mergedClassName,
-  })
 
   function onStart(e: DraggableEvent, data: DraggableData) {
     const { x, y } = getOffset(data)
@@ -65,20 +49,21 @@ function DroppableItem(props: Props) {
     const { left, top } = getRelativePosition(data.node)
     const position = getTranslatePosition(left, top)
 
-    const newChild = React.cloneElement(child, {
-      ref: droppableItemRef,
-      className: mergedClassName,
-      style: {
-        ...style,
-        opacity: 0.7,
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        transform: position,
-      },
-    })
-
-    setDroppableItem(newChild)
+    setDroppableItem(
+      <div
+        ref={droppableItemRef}
+        className={mergedClassName}
+        style={{
+          opacity: 0.7,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          transform: position,
+        }}
+      >
+        {child}
+      </div>
+    )
 
     props.onDropStart?.(e, data)
   }
@@ -124,7 +109,7 @@ function DroppableItem(props: Props) {
         onStop={onStop}
         nodeRef={itemRef}
       >
-        {newChild}
+        <div ref={itemRef} className={mergedClassName}>{child}</div>
       </DraggableCore>
       {droppableItem && ReactDOM.createPortal(droppableItem, props.container)}
     </>

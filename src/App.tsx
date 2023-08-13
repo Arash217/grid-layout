@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
+import { FlexibleItem } from './components/FlexibleItem'
 import { DroppableItem } from './components/DroppableItem'
 import { DataType, testLayout } from './data'
 
@@ -91,10 +92,6 @@ function App() {
       <DroppableItem
         key={item.i}
         container={document.body}
-        columnWidth={columnWidth}
-        rowHeight={rowHeight}
-        width={item.w}
-        height={item.h}
         onDropStart={(_, data) => {
           const { x, y } = getOffset(data)
 
@@ -108,7 +105,14 @@ function App() {
           setDroppingItem(droppingItem)
         }}
       >
+        <FlexibleItem
+          columnWidth={columnWidth}
+          rowHeight={rowHeight}
+          width={item.w}
+          height={item.h}
+        >
           <div className="droppable-element">Droppable Element (Drag me!)</div>
+        </FlexibleItem>
       </DroppableItem>
     ))
   }, [columnWidth, rowHeight])
