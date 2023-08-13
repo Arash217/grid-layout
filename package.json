@@ -1,12 +1,12 @@
 {
-  "name": "react-grid-layout",
+  "name": "grid-layout",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/react-grid-layout.js",
+      "import": "./dist/grid-layout.js",
       "types": "./dist/src/index.d.ts"
     },
     "./style.css": {
