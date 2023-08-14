@@ -17,6 +17,7 @@ import {
   calcGridColWidth,
   calcGridItemPosition,
   calcGridItemWHPx,
+  calcGridRowHeight,
   calcWH,
   calcXY,
   clamp,
@@ -291,14 +292,14 @@ function GridItem(props: Props) {
 
         if (offsetParent) {
           const { margin } = props
-          const rowHeight = containerHeight / rows
+          const rowHeight = calcGridRowHeight(positionParams)
+          const colWidth = calcGridColWidth(positionParams)
 
           const bottomBoundary =
             offsetParent.clientHeight -
             calcGridItemWHPx(h, rowHeight, margin[1])
           top = clamp(top, 0, bottomBoundary)
-
-          const colWidth = calcGridColWidth(positionParams)
+    
           const rightBoundary =
             containerWidth - calcGridItemWHPx(w, colWidth, margin[0])
           left = clamp(left, 0, rightBoundary)

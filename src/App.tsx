@@ -32,12 +32,12 @@ function App() {
     isDraggable: true,
     isResizable: true,
     compactType: null,
-    isBounded: false,
     isDroppable: true,
   })
 
   const [layout, setLayout] = useState(testLayout)
   const [droppingItem, setDroppingItem] = useState<DroppingItem | undefined>()
+  const [isBounded, setIsBounded] = useState(false)
 
   function handleDrop(layout: Layout) {
     setLayout([...(layout as DataType)])
@@ -48,29 +48,6 @@ function App() {
 
   const columnWidth = state.width / state.cols
   const rowHeight = state.height / state.rows
-
-  // useEffect(() => {
-  //   const element = containerRef.current
-
-  //   if (!element) return;
-
-  //   const observer = new ResizeObserver((entries) => {
-  //     const content = entries[0]
-  //     const { width, height } = content.contentRect
-
-  //     setState((state) => ({
-  //       ...state,
-  //       width: width * 0.5,
-  //       height: height * 0.5
-  //     }))
-  //   });
-
-  //   observer.observe(element);
-  //   return () => {
-  //     // Cleanup the observer by unobserving all elements
-  //     observer.disconnect();
-  //   };
-  // }, [])
 
   const generateDom = useCallback(() => {
     return layout.map((item) => {
@@ -135,7 +112,12 @@ function App() {
         <input type="number" v-model="width" />
         <input type="number" v-model="height" />
 
-        <input type="checkbox" id="isBounded" name="isBounded" />
+        <input
+          type="checkbox"
+          id="isBounded"
+          name="isBounded"
+          onChange={() => setIsBounded((isBounded) => !isBounded)}
+        />
         <label htmlFor="isBounded">isBounded</label>
 
         <input
@@ -154,6 +136,7 @@ function App() {
       </div>
       <div className="available-widgets">{availableWidgets}</div>
       <GridLayout
+        isBounded={isBounded}
         layout={layout}
         droppingItem={droppingItem}
         onDrop={handleDrop}
