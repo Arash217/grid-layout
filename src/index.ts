@@ -1,7 +1,7 @@
 import { GridLayout } from './components/GridLayout'
 import { DroppableItem } from './components/DroppableItem'
 import { FlexibleItem } from './components/FlexibleItem'
-import type * as Utils from './helpers/utils'
-import type * as CalculateUtils from './helpers/calculateUtils'
+import * as utils from './helpers/utils'
+import * as calculateUtils from './helpers/calculateUtils'
 
-export { GridLayout, DroppableItem, FlexibleItem, Utils, CalculateUtils }
+export { GridLayout, DroppableItem, FlexibleItem, utils, calculateUtils }

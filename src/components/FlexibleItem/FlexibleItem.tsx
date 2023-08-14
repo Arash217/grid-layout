@@ -35,6 +35,9 @@ export const FlexibleItem = (props: Props) => {
   }
 
   return React.cloneElement(child, {
-    style
+    style: {
+      ...child.props.style,
+      ...style
+    }
   })
 }

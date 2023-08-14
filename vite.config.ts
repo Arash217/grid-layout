@@ -21,21 +21,21 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        '@linaria/core',
-        '@linaria/react',
-        'clsx',
-        'fast-equals',
+        // '@linaria/core',
+        // '@linaria/react',
+        // 'clsx',
+        // 'fast-equals',
         'react',
         'react-dom',
-        'react-draggable',
-        'react-resizable',
+        // 'react-draggable',
+        // 'react-resizable',
       ],
-      // output: {
-      //   globals: {
-      //     react: 'React',
-      //     'react-dom': 'ReactDOM',
-      //   },
-      // },
+      output: {
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+        },
+      },
     },
   },
 })

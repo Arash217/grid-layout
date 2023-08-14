@@ -33,6 +33,7 @@ import {
   DroppingPosition,
   LayoutItemID,
   LIB_PREFIX,
+  usePrevious,
 } from '../../helpers/utils'
 
 const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-item`
@@ -102,16 +103,6 @@ export type Props = {
   onResize?: GridItemCallback<GridResizeEvent>
   onResizeStart?: GridItemCallback<GridResizeEvent>
   onResizeStop?: GridItemCallback<GridResizeEvent>
-}
-
-function usePrevious<T>(value: T) {
-  const ref = useRef<T>(value)
-
-  useEffect(() => {
-    ref.current = value
-  }, [value])
-
-  return ref.current
 }
 
 function GridItem(props: Props) {

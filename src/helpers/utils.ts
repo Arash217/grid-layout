@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { DraggableData, DraggableEvent } from 'react-draggable'
 
 export type ReactDraggableCallbackData = {
@@ -538,3 +539,13 @@ export function getCompactType(props: {
 export const noop = () => {}
 
 export const LIB_PREFIX = 'gl'
+
+export function usePrevious<T>(value: T) {
+  const ref = useRef<T>(value)
+
+  useEffect(() => {
+    ref.current = value
+  }, [value])
+
+  return ref.current
+}
