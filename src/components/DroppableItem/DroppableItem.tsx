@@ -1,13 +1,9 @@
-import React, {
-  ReactElement,
-  useMemo,
-  useState,
-  useRef,
-} from 'react'
+import React, { ReactElement, useMemo, useState, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable'
 import {
   DroppableEventCallback,
+  getClientPosition,
   getTranslatePosition,
 } from '../../helpers/utils'
 import { getOffset, getRelativePosition } from '../../helpers/calculateUtils'
@@ -39,7 +35,7 @@ function DroppableItem(props: Props) {
   )
 
   function onStart(e: DraggableEvent, data: DraggableData) {
-    const { x, y } = getOffset(data)
+    const { x, y } = getOffset(e, data)
 
     droppableItemOffset.current = {
       x,
@@ -84,9 +80,13 @@ function DroppableItem(props: Props) {
       },
     })
 
+    const { x: clientX, y: clientY } = getClientPosition(e)
+
     setDroppableItem(newChild)
 
-    const event = new CustomEvent('droppable-dragover', { detail: data })
+    const event = new CustomEvent('droppable-dragover', {
+      detail: { ...data, clientX: clientX!, clientY: clientY! },
+    })
     document.dispatchEvent(event)
 
     props.onDropDragOver?.(e, data)
@@ -95,7 +95,11 @@ function DroppableItem(props: Props) {
   function onStop(e: DraggableEvent, data: DraggableData) {
     setDroppableItem(null)
 
-    const event = new CustomEvent('droppable-drop', { detail: data })
+    const { x: clientX, y: clientY } = getClientPosition(e)
+
+    const event = new CustomEvent('droppable-drop', {
+      detail: { ...data, clientX: clientX!, clientY: clientY! },
+    })
     document.dispatchEvent(event)
 
     props.onDrop?.(e, data)
@@ -109,7 +113,9 @@ function DroppableItem(props: Props) {
         onStop={onStop}
         nodeRef={itemRef}
       >
-        <div ref={itemRef} className={mergedClassName}>{child}</div>
+        <div ref={itemRef} className={mergedClassName}>
+          {child}
+        </div>
       </DraggableCore>
       {droppableItem && ReactDOM.createPortal(droppableItem, props.container)}
     </>

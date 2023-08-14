@@ -33,8 +33,8 @@ import {
   DroppingPosition,
   LayoutItemID,
   LIB_PREFIX,
-  usePrevious,
 } from '../../helpers/utils'
+import { usePrevious } from '../../hooks'
 
 const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-item`
 const COMPONENT_CSS_PREFIX = `${COMPONENT_PREFIX}-`

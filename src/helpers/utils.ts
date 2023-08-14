@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { DraggableData, DraggableEvent } from 'react-draggable'
 
 export type ReactDraggableCallbackData = {
@@ -78,7 +77,10 @@ export type DroppableEventCallback = (
   data: DraggableData
 ) => void
 
-export type DroppableEvent = CustomEvent<DraggableData>
+export type DroppableEvent = CustomEvent<DraggableData & {
+  clientX: number
+  clientY: number
+}>
 
 export type CompactType = 'horizontal' | 'vertical' | null
 
@@ -540,12 +542,38 @@ export const noop = () => {}
 
 export const LIB_PREFIX = 'gl'
 
-export function usePrevious<T>(value: T) {
-  const ref = useRef<T>(value)
+export function getClientPosition(e: DraggableEvent) {
+  let x
+  let y
 
-  useEffect(() => {
-    ref.current = value
-  }, [value])
+  if (
+    e.type == 'touchstart' ||
+    e.type == 'touchmove' ||
+    e.type == 'touchend' ||
+    e.type == 'touchcancel'
+  ) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    const evt: TouchEvent = typeof e.originalEvent === 'undefined' ? e : e.originalEvent
+    const touch = evt.touches[0] || evt.changedTouches[0]
+    x = touch.pageX
+    y = touch.pageY
+  } else if (
+    e.type == 'mousedown' ||
+    e.type == 'mouseup' ||
+    e.type == 'mousemove' ||
+    e.type == 'mouseover' ||
+    e.type == 'mouseout' ||
+    e.type == 'mouseenter' ||
+    e.type == 'mouseleave'
+  ) {
+    const evt = e as MouseEvent
+    x = evt.clientX
+    y = evt.clientY
+  }
 
-  return ref.current
+  return {
+    x,
+    y,
+  }
 }

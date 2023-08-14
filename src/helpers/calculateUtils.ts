@@ -1,5 +1,5 @@
-import { DraggableData } from 'react-draggable'
-import { Position } from './utils'
+import { DraggableData, DraggableEvent } from 'react-draggable'
+import { Position, getClientPosition } from './utils'
 
 export type PositionParams = {
   margin: [number, number]
@@ -144,11 +144,12 @@ export function getRelativePosition(el: HTMLElement) {
   }
 }
 
-export function getOffset(data: DraggableData) {
+export function getOffset(e: DraggableEvent, data: DraggableData) {
+  const clientPosition = getClientPosition(e)
   const rect = data.node.getBoundingClientRect()
 
-  const x = data.x - rect.left
-  const y = data.y - rect.top
+  const x = clientPosition.x! - rect.left
+  const y = clientPosition.y! - rect.top
 
   return {
     x,

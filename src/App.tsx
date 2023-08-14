@@ -92,8 +92,8 @@ function App() {
       <DroppableItem
         key={item.i}
         container={document.body}
-        onDropStart={(_, data) => {
-          const { x, y } = getOffset(data)
+        onDropStart={(e, data) => {
+          const { x, y } = getOffset(e, data)
 
           const droppingItem = {
             ...item,
