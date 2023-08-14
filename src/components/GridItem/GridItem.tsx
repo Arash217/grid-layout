@@ -211,8 +211,6 @@ function GridItem(props: Props) {
       const { onDragStart, transformScale } = props
       if (!onDragStart) return
 
-      const newPosition: PartialPosition = { top: 0, left: 0 }
-
       // TODO: this wont work on nested parents
       const { offsetParent } = node
       if (!offsetParent) return
@@ -224,6 +222,8 @@ function GridItem(props: Props) {
       const pLeft = parentRect.left / transformScale
       const cTop = clientRect.top / transformScale
       const pTop = parentRect.top / transformScale
+
+      const newPosition: PartialPosition = { top: 0, left: 0 }
 
       newPosition.left = cLeft - pLeft + offsetParent.scrollLeft
       newPosition.top = cTop - pTop + offsetParent.scrollTop
