@@ -67,8 +67,10 @@ function DroppableItem(props: Props) {
   function onDrag(e: DraggableEvent, data: DraggableData) {
     const { x, y } = droppableItemOffset.current!
 
-    const left = data.x + window.scrollX - x
-    const top = data.y + window.scrollY - y
+    const { x: clientX, y: clientY } = getClientPosition(e)
+
+    const left = clientX! - x + window.scrollX
+    const top = clientY! - y + window.scrollY
 
     const position = getTranslatePosition(left, top)
 
@@ -79,8 +81,6 @@ function DroppableItem(props: Props) {
         transform: position,
       },
     })
-
-    const { x: clientX, y: clientY } = getClientPosition(e)
 
     setDroppableItem(newChild)
 
