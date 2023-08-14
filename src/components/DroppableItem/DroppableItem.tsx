@@ -27,7 +27,7 @@ function DroppableItem(props: Props) {
   const itemRef = React.useRef(null)
   const droppableItemRef = useRef(null)
   const [droppableItem, setDroppableItem] = useState<ReactElement | null>(null)
-  const droppableItemOffset = useRef<{ x: number; y: number } | null>(null)
+  const droppableItemOffset = useRef<{ left: number; top: number } | null>(null)
 
   const mergedClassName = useMemo(
     () => clsx(child.props.className, className),
@@ -35,11 +35,11 @@ function DroppableItem(props: Props) {
   )
 
   function onStart(e: DraggableEvent, data: DraggableData) {
-    const { x, y } = getOffset(e, data)
+    const { left: offsetLeft, top: offsetTop } = getOffset(e, data)
 
     droppableItemOffset.current = {
-      x,
-      y,
+      left: offsetLeft,
+      top: offsetTop,
     }
 
     const { left, top } = getRelativePosition(data.node)
@@ -65,12 +65,12 @@ function DroppableItem(props: Props) {
   }
 
   function onDrag(e: DraggableEvent, data: DraggableData) {
-    const { x, y } = droppableItemOffset.current!
+    const { left: offsetLeft, top: offsetTop } = droppableItemOffset.current!
 
-    const { x: clientX, y: clientY } = getClientPosition(e)
+    const { clientX, clientY } = getClientPosition(e)
 
-    const left = clientX! - x + window.scrollX
-    const top = clientY! - y + window.scrollY
+    const left = clientX! - offsetLeft + window.scrollX
+    const top = clientY! - offsetTop + window.scrollY
 
     const position = getTranslatePosition(left, top)
 
@@ -95,7 +95,7 @@ function DroppableItem(props: Props) {
   function onStop(e: DraggableEvent, data: DraggableData) {
     setDroppableItem(null)
 
-    const { x: clientX, y: clientY } = getClientPosition(e)
+    const { clientX, clientY } = getClientPosition(e)
 
     const event = new CustomEvent('droppable-drop', {
       detail: { ...data, clientX: clientX!, clientY: clientY! },

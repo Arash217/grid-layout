@@ -163,7 +163,8 @@ function GridLayout(props: Props) {
       setOldDragItem(cloneLayoutItem(l))
       setOldLayout(layout)
 
-      return onItemDragStart(e, layout, l, l, null, node)
+      // TODO:: check whether this type is correct
+      return onItemDragStart(e as Event, layout, l, l, null, node)
     },
     [layout, onItemDragStart]
   )
@@ -200,7 +201,8 @@ function GridLayout(props: Props) {
         allowOverlap
       )
 
-      onItemDrag(e, newLayout, oldDragItem, l, placeholder, node)
+      // TODO:: check whether this type is correct
+      onItemDrag(e as Event, newLayout, oldDragItem, l, placeholder, node)
 
       setLayout(
         allowOverlap
@@ -276,7 +278,8 @@ function GridLayout(props: Props) {
             undefined
           )
 
-      onItemDragStop(e, newLayout, oldDragItem, l, null, node)
+      // TODO:: check whether this type is correct
+      onItemDragStop(e as Event, newLayout, oldDragItem, l, null, node)
 
       setActiveDrag(null)
       setLayout(newLayout)
@@ -449,8 +452,8 @@ function GridLayout(props: Props) {
       const isMouseInGrid = mouseInGrid(mouseXY, gridLayout)
 
       const newDroppingPosition = {
-        top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
-        left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
+        top: mouseXY.y - droppingItem!.offsetTop - gridRect.top,
+        left: mouseXY.x - droppingItem!.offsetLeft - gridRect.left,
         e,
       }
 
@@ -538,8 +541,8 @@ function GridLayout(props: Props) {
         const gridRect = gridLayoutRef.current!.getBoundingClientRect()
 
         const newDroppingPosition = {
-          top: mouseXY.y - droppingItem!.offsetY - gridRect.top,
-          left: mouseXY.x - droppingItem!.offsetX - gridRect.left,
+          top: mouseXY.y - droppingItem!.offsetTop - gridRect.top,
+          left: mouseXY.x - droppingItem!.offsetLeft - gridRect.left,
           e,
         }
 

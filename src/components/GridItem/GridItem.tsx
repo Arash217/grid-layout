@@ -8,7 +8,7 @@ import React, {
 } from 'react'
 import clsx from 'clsx'
 
-import { DraggableCore } from 'react-draggable'
+import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable'
 import 'react-resizable/css/styles.css'
 import { Resizable } from 'react-resizable'
 import { styled } from '@linaria/react'
@@ -21,6 +21,7 @@ import {
   calcWH,
   calcXY,
   clamp,
+  getOffset,
 } from '../../helpers/calculateUtils'
 import {
   PartialPosition,
@@ -40,11 +41,11 @@ import { usePrevious } from '../../hooks'
 const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-item`
 const COMPONENT_CSS_PREFIX = `${COMPONENT_PREFIX}-`
 
-type GridItemCallback<Data extends GridDragEvent | GridResizeEvent> = (
+type GridItemCallback<T extends GridDragEvent | GridResizeEvent> = (
   i: LayoutItemID,
   w: number,
   h: number,
-  data: Data
+  data: T
 ) => void
 
 export type ReactRef<T extends HTMLElement> = {
@@ -184,6 +185,10 @@ function GridItem(props: Props) {
   )
 
   const child = useMemo(() => React.Children.only(children), [children])
+  const offset = useRef<{
+    left: number
+    top: number
+  } | null>(null)
 
   const createStyle = useCallback(
     function (pos: Position): { [key: string]: string } {
@@ -208,26 +213,22 @@ function GridItem(props: Props) {
   )
 
   const onDragStart = useCallback(
-    (e: Event, { node }: ReactDraggableCallbackData) => {
-      const { onDragStart, transformScale } = props
+    (e: DraggableEvent, data: DraggableData) => {
+      const { onDragStart } = props
       if (!onDragStart) return
 
-      // TODO: this wont work on nested parents
-      const { offsetParent } = node
-      if (!offsetParent) return
+      const node = data.node
+      const { left, top } = getOffset(e, data)
 
-      const parentRect = offsetParent.getBoundingClientRect()
-      const clientRect = node.getBoundingClientRect()
+      const newPosition = {
+        left: data.x! - left,
+        top: data.y! - top,
+      }
 
-      const cLeft = clientRect.left / transformScale
-      const pLeft = parentRect.left / transformScale
-      const cTop = clientRect.top / transformScale
-      const pTop = parentRect.top / transformScale
-
-      const newPosition: PartialPosition = { top: 0, left: 0 }
-
-      newPosition.left = cLeft - pLeft + offsetParent.scrollLeft
-      newPosition.top = cTop - pTop + offsetParent.scrollTop
+      offset.current = {
+        left: left,
+        top: top,
+      }
 
       setDragging({ ...newPosition })
 
@@ -265,7 +266,10 @@ function GridItem(props: Props) {
   )
 
   const onDrag = useCallback(
-    (e: Event, { node, deltaX, deltaY }: ReactDraggableCallbackData) => {
+    (
+      e: DraggableEvent,
+      { node, x: dragX, y: dragY }: ReactDraggableCallbackData
+    ) => {
       const { onDrag } = props
       if (!onDrag) return
 
@@ -273,8 +277,8 @@ function GridItem(props: Props) {
         throw new Error('onDrag called before onDragStart.')
       }
 
-      let top = dragging.top + deltaY
-      let left = dragging.left + deltaX
+      let top = dragY! - offset.current!.top
+      let left = dragX! - offset.current!.left
 
       const { isBounded, i, w, h, containerWidth } = props
       const positionParams = {
@@ -299,7 +303,7 @@ function GridItem(props: Props) {
             offsetParent.clientHeight -
             calcGridItemWHPx(h, rowHeight, margin[1])
           top = clamp(top, 0, bottomBoundary)
-    
+
           const rightBoundary =
             containerWidth - calcGridItemWHPx(w, colWidth, margin[0])
           left = clamp(left, 0, rightBoundary)
@@ -321,7 +325,7 @@ function GridItem(props: Props) {
   )
 
   const onDragStop = useCallback(
-    (e: Event, { node }: ReactDraggableCallbackData) => {
+    (e: DraggableEvent, { node }: ReactDraggableCallbackData) => {
       const { onDragStop } = props
       if (!onDragStop) return
 
@@ -461,16 +465,21 @@ function GridItem(props: Props) {
       droppingPosition.top !== prevDroppingPosition.top
 
     if (!dragging) {
-      onDragStart(droppingPosition.e, {
+      // TODO:: check whether this type is correct
+      onDragStart(droppingPosition.e as unknown as DraggableEvent, {
         node,
         deltaX: droppingPosition.left,
         deltaY: droppingPosition.top,
+        x: 0,
+        y: 0,
+        lastX: 0,
+        lastY: 0,
       })
     } else if (shouldDrag) {
       const deltaX = droppingPosition.left - dragging.left
       const deltaY = droppingPosition.top - dragging.top
-
-      onDrag(droppingPosition.e, {
+      // TODO:: check whether this type is correct
+      onDrag(droppingPosition.e as unknown as DraggableEvent, {
         node,
         deltaX,
         deltaY,
@@ -491,8 +500,6 @@ function GridItem(props: Props) {
   const mixinDraggable = useCallback(
     (child: ReactElement) => {
       return (
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
         <DraggableCore
           onStart={onDragStart}
           onDrag={onDrag}

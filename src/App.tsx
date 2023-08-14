@@ -70,13 +70,13 @@ function App() {
         key={item.i}
         container={document.body}
         onDropStart={(e, data) => {
-          const { x, y } = getOffset(e, data)
+          const { left, top } = getOffset(e, data)
 
           const droppingItem = {
             ...item,
             i: crypto.randomUUID(),
-            offsetX: x,
-            offsetY: y,
+            offsetLeft: left,
+            offsetTop: top,
           }
 
           setDroppingItem(droppingItem)

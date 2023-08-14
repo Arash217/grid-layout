@@ -11,11 +11,11 @@ export type ReactDraggableCallbackData = {
 }
 
 export type PartialPosition = { left: number; top: number }
-export type DroppingPosition = { left: number; top: number; e: Event }
+export type DroppingPosition = { left: number; top: number; e: DroppableEvent }
 
 export type Size = { width: number; height: number }
 export type GridDragEvent = {
-  e: Event
+  e: DraggableEvent
   node: HTMLElement
   newPosition: PartialPosition
 }
@@ -50,8 +50,8 @@ export type LayoutItem = {
 }
 
 export type DroppingItem = LayoutItem & {
-  offsetX: number
-  offsetY: number
+  offsetLeft: number
+  offsetTop: number
 }
 
 export type Layout = readonly LayoutItem[]
@@ -77,10 +77,12 @@ export type DroppableEventCallback = (
   data: DraggableData
 ) => void
 
-export type DroppableEvent = CustomEvent<DraggableData & {
-  clientX: number
-  clientY: number
-}>
+export type DroppableEvent = CustomEvent<
+  DraggableData & {
+    clientX: number
+    clientY: number
+  }
+>
 
 export type CompactType = 'horizontal' | 'vertical' | null
 
@@ -543,8 +545,8 @@ export const noop = () => {}
 export const LIB_PREFIX = 'gl'
 
 export function getClientPosition(e: DraggableEvent) {
-  let x
-  let y
+  let clientX
+  let clientY
 
   if (
     e.type == 'touchstart' ||
@@ -554,10 +556,17 @@ export function getClientPosition(e: DraggableEvent) {
   ) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore
-    const evt: TouchEvent = typeof e.originalEvent === 'undefined' ? e : e.originalEvent
+    const evt: TouchEvent =
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      typeof (e as TouchEvent).originalEvent === 'undefined'
+        ? e
+        : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          //@ts-ignore
+          e.originalEvent
     const touch = evt.touches[0] || evt.changedTouches[0]
-    x = touch.pageX
-    y = touch.pageY
+    clientX = touch.clientX
+    clientY = touch.clientY
   } else if (
     e.type == 'mousedown' ||
     e.type == 'mouseup' ||
@@ -568,12 +577,12 @@ export function getClientPosition(e: DraggableEvent) {
     e.type == 'mouseleave'
   ) {
     const evt = e as MouseEvent
-    x = evt.clientX
-    y = evt.clientY
+    clientX = evt.clientX
+    clientY = evt.clientY
   }
 
   return {
-    x,
-    y,
+    clientX,
+    clientY,
   }
 }

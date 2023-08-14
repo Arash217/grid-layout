@@ -148,11 +148,11 @@ export function getOffset(e: DraggableEvent, data: DraggableData) {
   const clientPosition = getClientPosition(e)
   const rect = data.node.getBoundingClientRect()
 
-  const x = clientPosition.x! - rect.left
-  const y = clientPosition.y! - rect.top
+  const left = clientPosition.clientX! - rect.left
+  const top = clientPosition.clientY! - rect.top
 
   return {
-    x,
-    y
+    left,
+    top
   }
 }
