@@ -1,4 +1,5 @@
 import React, {
+  MutableRefObject,
   ReactElement,
   useCallback,
   useEffect,
@@ -35,6 +36,7 @@ import {
   DroppingPosition,
   LayoutItemID,
   LIB_PREFIX,
+  getClientPosition,
 } from '../../helpers/utils'
 import { usePrevious } from '../../hooks'
 
@@ -74,6 +76,7 @@ export type Props = {
   usePercentages?: boolean
   transformScale: number
   droppingPosition?: DroppingPosition
+  gridLayoutRef: MutableRefObject<HTMLDivElement | null>
 
   className?: string
   style?: Record<string, string>
@@ -135,6 +138,7 @@ function GridItem(props: Props) {
     transformScale,
     resizeHandles,
     resizeHandle,
+    gridLayoutRef,
   } = props
 
   const [resizing, setResizing] = useState<{
@@ -218,17 +222,38 @@ function GridItem(props: Props) {
       if (!onDragStart) return
 
       const node = data.node
-      const { left, top } = getOffset(e, data)
+
+      let offsetTop: number
+      let offsetLeft: number
+
+      if (droppingPosition) {
+        offsetTop = droppingPosition.offsetTop
+        offsetLeft = droppingPosition.offsetLeft
+      } else {
+        const { top, left } = getOffset(e, data)
+        offsetTop = top
+        offsetLeft = left
+      }
+
+      const { clientY, clientX } = getClientPosition(e)
+      const gridRect = gridLayoutRef.current!.getBoundingClientRect()
+
+      const top = clientY! - offsetTop - gridRect.top
+      const left = clientX! - offsetLeft - gridRect.left
 
       const newPosition = {
-        left: data.x! - left,
-        top: data.y! - top,
+        left,
+        top,
       }
 
       offset.current = {
-        left: left,
-        top: top,
+        left: offsetLeft,
+        top: offsetTop,
       }
+
+      // console.log(e.clientX, e.clientY)
+      // console.log(offset.current!.left, offset.current!.top)
+      // console.log(gridRect.left, gridRect.top)
 
       setDragging({ ...newPosition })
 
@@ -254,22 +279,11 @@ function GridItem(props: Props) {
         newPosition,
       })
     },
-    [
-      cols,
-      containerHeight,
-      containerPadding,
-      containerWidth,
-      margin,
-      props,
-      rows,
-    ]
+    [cols, containerHeight, containerPadding, containerWidth, droppingPosition, gridLayoutRef, margin, props, rows]
   )
 
   const onDrag = useCallback(
-    (
-      e: DraggableEvent,
-      { node, x: dragX, y: dragY }: ReactDraggableCallbackData
-    ) => {
+    (e: DraggableEvent, { node }: ReactDraggableCallbackData) => {
       const { onDrag } = props
       if (!onDrag) return
 
@@ -277,8 +291,15 @@ function GridItem(props: Props) {
         throw new Error('onDrag called before onDragStart.')
       }
 
-      let top = dragY! - offset.current!.top
-      let left = dragX! - offset.current!.left
+      const client = getClientPosition(e)
+      const gridRect = gridLayoutRef.current!.getBoundingClientRect()
+
+      let top = client.clientY! - offset.current!.top - gridRect.top
+      let left = client.clientX! - offset.current!.left - gridRect.left
+
+      // console.log(e.clientX, e.clientY)
+      // console.log(offset.current!.left, offset.current!.top)
+      // console.log(gridRect.left, gridRect.top)
 
       const { isBounded, i, w, h, containerWidth } = props
       const positionParams = {
@@ -321,7 +342,16 @@ function GridItem(props: Props) {
         newPosition,
       })
     },
-    [cols, containerHeight, containerPadding, dragging, margin, props, rows]
+    [
+      cols,
+      containerHeight,
+      containerPadding,
+      dragging,
+      gridLayoutRef,
+      margin,
+      props,
+      rows,
+    ]
   )
 
   const onDragStop = useCallback(
@@ -464,25 +494,23 @@ function GridItem(props: Props) {
       (dragging && droppingPosition.left !== prevDroppingPosition.left) ||
       droppingPosition.top !== prevDroppingPosition.top
 
+    // const event = new MouseEvent('mouseover', {
+    //   ...droppingPosition.e,
+    //   clientX: droppingPosition.left,
+    //   clientY: droppingPosition.top
+    // })
+
     if (!dragging) {
       // TODO:: check whether this type is correct
       onDragStart(droppingPosition.e as unknown as DraggableEvent, {
         node,
-        deltaX: droppingPosition.left,
-        deltaY: droppingPosition.top,
-        x: 0,
-        y: 0,
-        lastX: 0,
-        lastY: 0,
       })
     } else if (shouldDrag) {
-      const deltaX = droppingPosition.left - dragging.left
-      const deltaY = droppingPosition.top - dragging.top
+      // const deltaX = droppingPosition.left - dragging.left
+      // const deltaY = droppingPosition.top - dragging.top
       // TODO:: check whether this type is correct
       onDrag(droppingPosition.e as unknown as DraggableEvent, {
         node,
-        deltaX,
-        deltaY,
       })
     }
   }, [

@@ -145,11 +145,11 @@ export function getRelativePosition(el: HTMLElement) {
 }
 
 export function getOffset(e: DraggableEvent, data: DraggableData) {
-  const clientPosition = getClientPosition(e)
+  const { clientX, clientY } = getClientPosition(e)
   const rect = data.node.getBoundingClientRect()
-
-  const left = clientPosition.clientX! - rect.left
-  const top = clientPosition.clientY! - rect.top
+  
+  const left = clientX! - rect.left
+  const top = clientY! - rect.top
 
   return {
     left,

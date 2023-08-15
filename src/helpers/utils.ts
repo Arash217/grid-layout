@@ -11,7 +11,13 @@ export type ReactDraggableCallbackData = {
 }
 
 export type PartialPosition = { left: number; top: number }
-export type DroppingPosition = { left: number; top: number; e: DroppableEvent }
+export type DroppingPosition = {
+  left: number
+  top: number
+  e: DroppableEvent
+  offsetLeft: number
+  offsetTop: number
+}
 
 export type Size = { width: number; height: number }
 export type GridDragEvent = {

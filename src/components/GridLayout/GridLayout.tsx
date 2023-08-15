@@ -451,10 +451,19 @@ function GridLayout(props: Props) {
       const gridRect = gridLayout.getBoundingClientRect()
       const isMouseInGrid = mouseInGrid(mouseXY, gridLayout)
 
+      const top = mouseXY.y - droppingItem!.offsetTop - gridRect.top
+      const left = mouseXY.x - droppingItem!.offsetLeft - gridRect.left
+
+      const mouseEvent = new MouseEvent('mouseover', {
+        ...e.detail,
+      })
+
       const newDroppingPosition = {
-        top: mouseXY.y - droppingItem!.offsetTop - gridRect.top,
-        left: mouseXY.x - droppingItem!.offsetLeft - gridRect.left,
-        e,
+        top,
+        left,
+        e: mouseEvent,
+        offsetLeft: droppingItem!.offsetLeft,
+        offsetTop: droppingItem!.offsetTop
       }
 
       if (isMouseInGrid && !droppingDOMNode) {
@@ -639,6 +648,7 @@ function GridLayout(props: Props) {
         isBounded={false}
         useCSSTransforms={useCSSTransforms}
         transformScale={transformScale}
+        gridLayoutRef={gridLayoutRef}
       >
         <div />
       </GridItem>
@@ -711,6 +721,7 @@ function GridLayout(props: Props) {
           droppingPosition={isDroppingItem ? droppingPosition : undefined}
           resizeHandles={resizeHandlesOptions}
           resizeHandle={resizeHandle}
+          gridLayoutRef={gridLayoutRef}
         >
           {child}
         </GridItem>
