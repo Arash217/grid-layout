@@ -11,10 +11,11 @@ export type ReactDraggableCallbackData = {
 }
 
 export type PartialPosition = { left: number; top: number }
+
 export type DroppingPosition = {
   left: number
   top: number
-  e: MouseEvent
+  e: DragEvent
   offsetLeft: number
   offsetTop: number
 }
@@ -583,6 +584,12 @@ export function getClientPosition(e: DraggableEvent) {
     e.type == 'mouseleave'
   ) {
     const evt = e as MouseEvent
+    clientX = evt.clientX
+    clientY = evt.clientY
+  } else if (
+    e.type == 'dragover'
+  ) {
+    const evt = e as DragEvent
     clientX = evt.clientX
     clientY = evt.clientY
   }

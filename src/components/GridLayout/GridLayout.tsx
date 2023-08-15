@@ -454,17 +454,20 @@ function GridLayout(props: Props) {
       const top = mouseXY.y - droppingItem!.offsetTop - gridRect.top
       const left = mouseXY.x - droppingItem!.offsetLeft - gridRect.left
 
-      // DroppingPosition expects a mouse event, so we fake it here.
-      const mouseEvent = new MouseEvent('mouseover', {
+      /* 
+        There isn't a generic event for both mouse and touch event, 
+        so we used the DragEvent here. (which is technically still a mouse event)
+      */
+      const dragEvent = new DragEvent('dragover', {
         ...e.detail,
       })
 
       const newDroppingPosition = {
         top,
         left,
-        e: mouseEvent,
+        e: dragEvent,
         offsetLeft: droppingItem!.offsetLeft,
-        offsetTop: droppingItem!.offsetTop
+        offsetTop: droppingItem!.offsetTop,
       }
 
       if (isMouseInGrid && !droppingDOMNode) {

@@ -257,10 +257,6 @@ function GridItem(props: Props) {
         top: offsetTop,
       }
 
-      // console.log(e.clientX, e.clientY)
-      // console.log(offset.current!.left, offset.current!.top)
-      // console.log(gridRect.left, gridRect.top)
-
       setDragging({ ...newPosition })
 
       // Call callback with this data
@@ -311,10 +307,6 @@ function GridItem(props: Props) {
 
       let top = client.clientY! - offset.current!.top - gridRect.top
       let left = client.clientX! - offset.current!.left - gridRect.left
-
-      // console.log(e.clientX, e.clientY)
-      // console.log(offset.current!.left, offset.current!.top)
-      // console.log(gridRect.left, gridRect.top)
 
       const { isBounded, i, w, h, containerWidth } = props
       const positionParams = {
@@ -509,12 +501,6 @@ function GridItem(props: Props) {
     const shouldDrag =
       (dragging && droppingPosition.left !== prevDroppingPosition.left) ||
       droppingPosition.top !== prevDroppingPosition.top
-
-    // const event = new MouseEvent('mouseover', {
-    //   ...droppingPosition.e,
-    //   clientX: droppingPosition.left,
-    //   clientY: droppingPosition.top
-    // })
 
     if (!dragging) {
       onDragStart(
