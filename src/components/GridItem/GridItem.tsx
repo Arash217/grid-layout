@@ -82,6 +82,8 @@ export type Props = {
 
   className?: string
   style?: Record<string, string>
+  handle?: string
+  cancel?: string
 
   i: LayoutItemID
 
@@ -117,6 +119,8 @@ function GridItem(props: Props) {
     children,
     className,
     style,
+    cancel = '',
+    handle = '',
     i,
     x,
     y,
@@ -466,8 +470,6 @@ function GridItem(props: Props) {
 
   const onResizeStart = useCallback(
     (e: Event, callbackData: { node: HTMLElement; size: Position }) => {
-      // prevent drag overriding resize event, not sure how to fix it better
-      e.stopPropagation()
       onResizeHandler(e, callbackData, 'onResizeStart')
     },
     [onResizeHandler]
@@ -534,11 +536,8 @@ function GridItem(props: Props) {
           onStart={onDragStart}
           onDrag={onDrag}
           onStop={onDragStop}
-          // handle={props.handle}
-          // cancel={
-          //   '.react-resizable-handle' +
-          //   (this.props.cancel ? ',' + this.props.cancel : '')
-          // }
+          handle={handle}
+          cancel={'.react-resizable-handle' + (cancel ? ',' + cancel : '')}
           scale={transformScale}
           nodeRef={elementRef}
         >
@@ -546,7 +545,7 @@ function GridItem(props: Props) {
         </DraggableCore>
       )
     },
-    [onDrag, onDragStart, onDragStop, transformScale]
+    [cancel, handle, onDrag, onDragStart, onDragStop, transformScale]
   )
 
   const mixinResizable = useCallback(
