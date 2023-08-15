@@ -454,6 +454,7 @@ function GridLayout(props: Props) {
       const top = mouseXY.y - droppingItem!.offsetTop - gridRect.top
       const left = mouseXY.x - droppingItem!.offsetLeft - gridRect.left
 
+      // DroppingPosition expects a mouse event, so we fake it here.
       const mouseEvent = new MouseEvent('mouseover', {
         ...e.detail,
       })

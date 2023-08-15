@@ -70,7 +70,7 @@ function App() {
         key={item.i}
         container={document.body}
         onDropStart={(e, data) => {
-          const { left, top } = getOffset(e, data)
+          const { left, top } = getOffset(e, data.node)
 
           const droppingItem = {
             ...item,

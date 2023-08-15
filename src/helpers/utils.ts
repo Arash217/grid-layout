@@ -14,7 +14,7 @@ export type PartialPosition = { left: number; top: number }
 export type DroppingPosition = {
   left: number
   top: number
-  e: DroppableEvent
+  e: MouseEvent
   offsetLeft: number
   offsetTop: number
 }

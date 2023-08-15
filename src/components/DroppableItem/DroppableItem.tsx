@@ -35,7 +35,7 @@ function DroppableItem(props: Props) {
   )
 
   function onStart(e: DraggableEvent, data: DraggableData) {
-    const { left: offsetLeft, top: offsetTop } = getOffset(e, data)
+    const { left: offsetLeft, top: offsetTop } = getOffset(e, data.node)
 
     droppableItemOffset.current = {
       left: offsetLeft,

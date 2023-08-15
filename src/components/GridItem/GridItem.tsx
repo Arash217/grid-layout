@@ -56,6 +56,8 @@ export type ReactRef<T extends HTMLElement> = {
 
 export type ResizeHandleAxis = 's' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'
 
+export type DraggableNode = Pick<DraggableData, 'node'>
+
 export type ResizeHandle =
   | ReactElement
   | ((
@@ -217,7 +219,11 @@ function GridItem(props: Props) {
   )
 
   const onDragStart = useCallback(
-    (e: DraggableEvent, data: DraggableData) => {
+    (
+      e: DraggableEvent,
+      data: DraggableNode,
+      droppingPosition?: DroppingPosition
+    ) => {
       const { onDragStart } = props
       if (!onDragStart) return
 
@@ -230,7 +236,7 @@ function GridItem(props: Props) {
         offsetTop = droppingPosition.offsetTop
         offsetLeft = droppingPosition.offsetLeft
       } else {
-        const { top, left } = getOffset(e, data)
+        const { top, left } = getOffset(e, node)
         offsetTop = top
         offsetLeft = left
       }
@@ -279,11 +285,20 @@ function GridItem(props: Props) {
         newPosition,
       })
     },
-    [cols, containerHeight, containerPadding, containerWidth, droppingPosition, gridLayoutRef, margin, props, rows]
+    [
+      cols,
+      containerHeight,
+      containerPadding,
+      containerWidth,
+      gridLayoutRef,
+      margin,
+      props,
+      rows,
+    ]
   )
 
   const onDrag = useCallback(
-    (e: DraggableEvent, { node }: ReactDraggableCallbackData) => {
+    (e: DraggableEvent, { node }: DraggableNode) => {
       const { onDrag } = props
       if (!onDrag) return
 
@@ -459,6 +474,7 @@ function GridItem(props: Props) {
 
   const onResizeStart = useCallback(
     (e: Event, callbackData: { node: HTMLElement; size: Position }) => {
+      // prevent drag overriding resize event, not sure how to fix it better
       e.stopPropagation()
       onResizeHandler(e, callbackData, 'onResizeStart')
     },
@@ -501,15 +517,15 @@ function GridItem(props: Props) {
     // })
 
     if (!dragging) {
-      // TODO:: check whether this type is correct
-      onDragStart(droppingPosition.e as unknown as DraggableEvent, {
-        node,
-      })
+      onDragStart(
+        droppingPosition.e,
+        {
+          node,
+        },
+        droppingPosition
+      )
     } else if (shouldDrag) {
-      // const deltaX = droppingPosition.left - dragging.left
-      // const deltaY = droppingPosition.top - dragging.top
-      // TODO:: check whether this type is correct
-      onDrag(droppingPosition.e as unknown as DraggableEvent, {
+      onDrag(droppingPosition.e, {
         node,
       })
     }
