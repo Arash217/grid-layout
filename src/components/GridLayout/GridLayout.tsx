@@ -27,7 +27,6 @@ import {
   DroppingItem,
   LayoutItemID,
   mouseInGrid,
-  DroppableEvent,
   LIB_PREFIX,
 } from '../../helpers/utils'
 
@@ -435,16 +434,16 @@ function GridLayout(props: Props) {
     setDroppingPosition(undefined)
   }, [allowOverlap, cols, compactType, droppingItem, layout, verticalCompact])
 
-  const onDroppableDragOver = useCallback(
-    (e: DroppableEvent) => {
+  const onDragOver = useCallback(
+    (e: DragEvent) => {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault() // Prevent any browser native action
       e.stopPropagation()
 
       const mouseXY = {
-        x: e.detail.clientX,
-        y: e.detail.clientY,
+        x: e.clientX,
+        y: e.clientY,
       }
 
       const gridLayout = gridLayoutRef.current!
@@ -454,18 +453,10 @@ function GridLayout(props: Props) {
       const top = mouseXY.y - droppingItem!.offsetTop - gridRect.top
       const left = mouseXY.x - droppingItem!.offsetLeft - gridRect.left
 
-      /* 
-        There isn't a generic event for both mouse and touch event, 
-        so we used the DragEvent here. (which is technically still a mouse event)
-      */
-      const dragEvent = new DragEvent('dragover', {
-        ...e.detail,
-      })
-
       const newDroppingPosition = {
         top,
         left,
-        e: dragEvent,
+        e,
         offsetLeft: droppingItem!.offsetLeft,
         offsetTop: droppingItem!.offsetTop,
       }
@@ -536,16 +527,16 @@ function GridLayout(props: Props) {
     ]
   )
 
-  const onDroppableDrop = useCallback(
-    (e: DroppableEvent) => {
+  const onDrop = useCallback(
+    (e: DragEvent) => {
       if (!isDraggableAndDroppable) return
 
       e.preventDefault()
       e.stopPropagation()
 
       const mouseXY = {
-        x: e.detail.clientX,
-        y: e.detail.clientY,
+        x: e.clientX,
+        y: e.clientY,
       }
 
       const isMouseInGrid = mouseInGrid(mouseXY, gridLayoutRef.current!)
@@ -614,15 +605,15 @@ function GridLayout(props: Props) {
   )
 
   useEffect(() => {
-    document.addEventListener('droppable-dragover', onDroppableDragOver)
+    document.addEventListener('dragover', onDragOver)
     return () =>
-      document.removeEventListener('droppable-dragover', onDroppableDragOver)
-  }, [onDroppableDragOver])
+      document.removeEventListener('dragover', onDragOver)
+  }, [onDragOver])
 
   useEffect(() => {
-    document.addEventListener('droppable-drop', onDroppableDrop)
-    return () => document.removeEventListener('droppable-drop', onDroppableDrop)
-  }, [onDroppableDrop])
+    document.addEventListener('drop', onDrop)
+    return () => document.removeEventListener('drop', onDrop)
+  }, [onDrop])
 
   const placeholder = useCallback(() => {
     if (!activeDrag) return null

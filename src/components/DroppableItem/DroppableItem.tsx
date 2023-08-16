@@ -84,8 +84,14 @@ function DroppableItem(props: Props) {
 
     setDroppableItem(newChild)
 
-    const event = new CustomEvent('droppable-dragover', {
-      detail: { ...data, clientX: clientX!, clientY: clientY! },
+    /* 
+      There isn't a generic event for both mouse and touch event, 
+      so we used the DragEvent here. (which is technically still a mouse event)
+    */
+    const event = new DragEvent('dragover', {
+      ...data,
+      clientX: clientX!,
+      clientY: clientY!,
     })
     document.dispatchEvent(event)
 
@@ -97,8 +103,14 @@ function DroppableItem(props: Props) {
 
     const { clientX, clientY } = getClientPosition(e)
 
-    const event = new CustomEvent('droppable-drop', {
-      detail: { ...data, clientX: clientX!, clientY: clientY! },
+    /* 
+      There isn't a generic event for both mouse and touch event, 
+      so we used the DragEvent here. (which is technically still a mouse event)
+    */
+    const event = new DragEvent('drop', {
+      ...data,
+      clientX: clientX!,
+      clientY: clientY!,
     })
     document.dispatchEvent(event)
 
