@@ -544,8 +544,8 @@ function GridLayout(props: Props) {
       e.stopPropagation()
 
       const mouseXY = {
-        x: e.detail.x,
-        y: e.detail.y,
+        x: e.detail.clientX,
+        y: e.detail.clientY,
       }
 
       const isMouseInGrid = mouseInGrid(mouseXY, gridLayoutRef.current!)
