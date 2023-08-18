@@ -9,18 +9,6 @@ import { getOffset } from './helpers/calculateUtils'
 
 import './index.css'
 
-// css`
-//   :global() {
-//     .available-widgets {
-//       display: flex;
-//       margin-bottom: 10px;
-//     }
-//     .droppable-element {
-//       background: pink;
-//     }
-//   }
-// `
-
 function App() {
   const [state, setState] = useState({
     className: 'layout',
@@ -89,7 +77,13 @@ function App() {
           width={item.w}
           height={item.h}
         >
-          <div className="droppable-element">Droppable Element (Drag me!)</div>
+          <div
+            style={{
+              backgroundColor: 'pink',
+            }}
+          >
+            Droppable Element (Drag me!)
+          </div>
         </FlexibleItem>
       </DroppableItem>
     ))
@@ -135,7 +129,14 @@ function App() {
         />
         <label htmlFor="showGridLines">showGridLines</label>
       </div>
-      <div className="available-widgets">{availableWidgets}</div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        {availableWidgets}
+      </div>
       <GridLayout
         isBounded={isBounded}
         layout={layout}
