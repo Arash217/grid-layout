@@ -4,21 +4,22 @@ import { FlexibleItem } from './components/FlexibleItem'
 import { DroppableItem } from './components/DroppableItem'
 import { DataType, testLayout } from './data'
 
-import { css } from '@linaria/core'
 import { DroppingItem, Layout } from './helpers/utils'
 import { getOffset } from './helpers/calculateUtils'
 
-css`
-  :global() {
-    .available-widgets {
-      display: flex;
-      margin-bottom: 10px;
-    }
-    .droppable-element {
-      background: pink;
-    }
-  }
-`
+import './index.css'
+
+// css`
+//   :global() {
+//     .available-widgets {
+//       display: flex;
+//       margin-bottom: 10px;
+//     }
+//     .droppable-element {
+//       background: pink;
+//     }
+//   }
+// `
 
 function App() {
   const [state, setState] = useState({

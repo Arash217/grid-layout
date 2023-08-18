@@ -17,14 +17,14 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "panda codegen",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && npm run build:css",
+    "build:css": "panda cssgen --outfile dist/style.css",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@linaria/core": "^4.5.4",
-    "@linaria/react": "^4.5.4",
     "clsx": "^2.0.0",
     "fast-equals": "^5.0.1",
     "react": "^18.2.0",
@@ -33,7 +33,7 @@
     "react-resizable": "^3.0.5"
   },
   "devDependencies": {
-    "@linaria/vite": "^4.5.4",
+    "@pandacss/dev": "^0.11.1",
     "@types/lodash": "^4.14.196",
     "@types/node": "^20.4.10",
     "@types/react": "^18.2.15",

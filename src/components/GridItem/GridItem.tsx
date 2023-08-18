@@ -7,12 +7,13 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import clsx from 'clsx'
 
 import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable'
 import 'react-resizable/css/styles.css'
 import { Resizable } from 'react-resizable'
-import { styled } from '@linaria/react'
+
+import { css } from '../../../styled-system/css'
+import clsx from 'clsx'
 
 import {
   calcGridColWidth,
@@ -35,13 +36,9 @@ import {
   GridResizeEvent,
   DroppingPosition,
   LayoutItemID,
-  LIB_PREFIX,
   getClientPosition,
 } from '../../helpers/utils'
-import { usePrevious } from '../../hooks'
-
-const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-item`
-const COMPONENT_CSS_PREFIX = `${COMPONENT_PREFIX}-`
+import { usePrevious } from '../../hooks/use-previous'
 
 type GridItemCallback<T extends GridDragEvent | GridResizeEvent> = (
   i: LayoutItemID,
@@ -619,39 +616,60 @@ function GridItem(props: Props) {
     ]
   )
 
-  let newChild = useMemo(
-    () =>
-      React.cloneElement(child, {
-        ref: elementRef,
-        className: clsx(COMPONENT_PREFIX, child.props.className, className, {
-          [`${COMPONENT_CSS_PREFIX}static`]: props.static,
-          [`${COMPONENT_CSS_PREFIX}resizing`]: Boolean(resizing),
-          [`${COMPONENT_CSS_PREFIX}draggable`]: isDraggable,
-          [`${COMPONENT_CSS_PREFIX}dragging`]: Boolean(dragging),
-          [`${COMPONENT_CSS_PREFIX}dropping`]: Boolean(droppingPosition),
-          [`${COMPONENT_CSS_PREFIX}css-transforms`]: useCSSTransforms,
-        }),
-        // We can set the width and height on the child, but unfortunately we can't set the position.
-        style: {
-          ...style,
-          ...child.props.style,
-          ...createStyle(pos),
+  let newChild = useMemo(() => {
+    const gridItemStaticStyles = css({
+      cursor: 'auto',
+      userSelect: 'none',
+    })
+
+    const gridItemDraggableStyles = css({
+      cursor: 'move',
+    })
+
+    const gridItemResizingStyles = css({
+      opacity: 0.7,
+    })
+
+    const gridItemDraggingStyles = css({
+      zIndex: 1,
+    })
+
+    const gridItemDroppingStyles = css({
+      visibility: 'hidden',
+    })
+
+    return React.cloneElement(child, {
+      ref: elementRef,
+      className: clsx(
+        {
+          [gridItemStaticStyles]: props.static,
+          [gridItemDraggableStyles]: isDraggable,
+          [gridItemResizingStyles]: Boolean(resizing),
+          [gridItemDraggingStyles]: Boolean(dragging),
+          [gridItemDroppingStyles]: Boolean(droppingPosition),
         },
-      }),
-    [
-      child,
-      className,
-      createStyle,
-      dragging,
-      droppingPosition,
-      isDraggable,
-      pos,
-      props.static,
-      resizing,
-      style,
-      useCSSTransforms,
-    ]
-  )
+        child.props.className,
+        className
+      ),
+      // We can set the width and height on the child, but unfortunately we can't set the position.
+      style: {
+        ...style,
+        ...child.props.style,
+        ...createStyle(pos),
+      },
+    })
+  }, [
+    child,
+    className,
+    createStyle,
+    dragging,
+    droppingPosition,
+    isDraggable,
+    pos,
+    props.static,
+    resizing,
+    style,
+  ])
 
   newChild = useMemo(
     () => (isResizable ? mixinResizable(newChild, pos) : newChild),
@@ -666,27 +684,4 @@ function GridItem(props: Props) {
   return newChild
 }
 
-const StyledGridItem = styled(GridItem)`
-  &.gl-grid-item-static {
-    cursor: auto;
-    user-select: none;
-  }
-
-  &.gl-grid-item-draggable {
-    cursor: move;
-  }
-
-  &.gl-grid-item-resizing {
-    opacity: 0.7;
-  }
-
-  &.gl-grid-item-dragging {
-    z-index: 1;
-  }
-
-  &.gl-grid-item-dropping {
-    visibility: hidden;
-  }
-`
-
-export { StyledGridItem as GridItem }
+export { GridItem }

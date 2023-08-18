@@ -27,17 +27,15 @@ import {
   DroppingItem,
   LayoutItemID,
   mouseInGrid,
-  LIB_PREFIX,
 } from '../../helpers/utils'
 
 import { deepEqual } from 'fast-equals'
-import { styled } from '@linaria/react'
-import clsx from 'clsx'
+
 import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
 import { PositionParams, calcXY } from '../../helpers/calculateUtils'
 
-const COMPONENT_PREFIX = `${LIB_PREFIX}-grid-layout`
-const COMPONENT_CSS_PREFIX = `${COMPONENT_PREFIX}-`
+import { css } from '../../../styled-system/css'
+import clsx from 'clsx'
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -144,15 +142,6 @@ function GridLayout(props: Props) {
     setLayout(initialLayout)
   }, [initialLayout])
 
-  const mergedStyle: React.CSSProperties = useMemo(() => {
-    return {
-      minWidth: width,
-      maxWidth: width,
-      minHeight: height,
-      maxHeight: height,
-      ...style,
-    }
-  }, [width, height, style])
 
   const onDragStart = useCallback(
     (i: LayoutItemID, _x: number, _y: number, { e, node }: GridDragEvent) => {
@@ -758,11 +747,37 @@ function GridLayout(props: Props) {
     [droppingDOMNode, isDroppable, processGridItem]
   )
 
+  const mergedStyle: React.CSSProperties = useMemo(() => {
+    return {
+      minWidth: width,
+      maxWidth: width,
+      minHeight: height,
+      maxHeight: height,
+      '--cols': cols,
+      '--rows': rows,
+      ...style,
+    }
+  }, [width, height, cols, rows, style])
+
   const mergedClassName = useMemo(
-    () =>
-      clsx(COMPONENT_PREFIX, className, {
-        [`${COMPONENT_CSS_PREFIX}grid-lines`]: showGridLines,
-      }),
+    () => {
+      const gridLayoutStyles = css({
+        position: 'relative',
+        '&:before': {
+          content: "''",
+          backgroundSize: `calc(100% / var(--cols)) calc(100% / var(--rows))`,
+          backgroundImage: 'url(data:image/svg+xml;base64,PCEtLSBSZXBsYWNlIHRoZSBjb250ZW50cyBvZiB0aGlzIGVkaXRvciB3aXRoIHlvdXIgU1ZHIGNvZGUgLS0+Cgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZC1jZWxsIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkMGQwZDAiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkLWNlbGwpIi8+PC9zdmc+)',
+          height: '100%',
+          width: '100%',
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          boxShadow: '0px 0px 2px 1px #d1d1d1;'
+        }
+      })
+
+      return clsx({[gridLayoutStyles]: showGridLines }, className)
+    },
     [className, showGridLines]
   )
 
@@ -780,22 +795,4 @@ function GridLayout(props: Props) {
   return gridLayout
 }
 
-const StyledGridLayout = styled(GridLayout)`
-  &.gl-grid-layout-grid-lines {
-    position: relative;
-    &::before {
-      content: '';
-      background-size: ${({ cols, rows }) =>
-        `calc(100% / ${cols}) calc(100% / ${rows})`};
-      background-image: url(data:image/svg+xml;base64,PCEtLSBSZXBsYWNlIHRoZSBjb250ZW50cyBvZiB0aGlzIGVkaXRvciB3aXRoIHlvdXIgU1ZHIGNvZGUgLS0+Cgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZC1jZWxsIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkMGQwZDAiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkLWNlbGwpIi8+PC9zdmc+);
-      height: 100%;
-      width: 100%;
-      position: absolute;
-      left: 0;
-      top: 0;
-      box-shadow: 0px 0px 2px 1px #d1d1d1;
-    }
-  }
-`
-
-export { StyledGridLayout as GridLayout }
+export { GridLayout }
