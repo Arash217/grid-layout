@@ -549,8 +549,6 @@ export function getCompactType(props: {
 
 export const noop = () => {}
 
-export const LIB_PREFIX = 'gl'
-
 export function getClientPosition(e: DraggableEvent) {
   let clientX
   let clientY
