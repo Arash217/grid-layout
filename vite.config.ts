@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
 
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 
@@ -8,6 +9,7 @@ import dts from 'vite-plugin-dts'
 export default defineConfig({
   plugins: [
     react(),
+    vanillaExtractPlugin(),
     dts({
       insertTypesEntry: true,
     }),

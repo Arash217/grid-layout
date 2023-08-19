@@ -9,7 +9,7 @@ import {
 import { getOffset, getRelativePosition } from '../../helpers/calculateUtils'
 
 import clsx from 'clsx'
-import { css } from '../../../styled-system/css'
+import { droppableItemStyles } from './DroppableItem.css'
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -30,12 +30,7 @@ function DroppableItem(props: Props) {
   const droppableItemOffset = useRef<{ left: number; top: number } | null>(null)
 
   const mergedClassName = useMemo(
-    () => { 
-      const droppableItemStyles = css({
-        cursor: 'grab'
-      })
-      
-      return clsx(droppableItemStyles, child.props.className, className) },
+    () => clsx(droppableItemStyles, child.props.className, className),
     [child.props.className, className]
   )
 

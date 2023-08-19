@@ -34,8 +34,8 @@ import { deepEqual } from 'fast-equals'
 import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
 import { PositionParams, calcXY } from '../../helpers/calculateUtils'
 
-import { css } from '../../../styled-system/css'
 import clsx from 'clsx'
+import { gridLayoutStyles } from './GridLayout.css'
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -760,24 +760,7 @@ function GridLayout(props: Props) {
   }, [width, height, cols, rows, style])
 
   const mergedClassName = useMemo(
-    () => {
-      const gridLayoutStyles = css({
-        position: 'relative',
-        '&:before': {
-          content: "''",
-          backgroundSize: `calc(100% / var(--cols)) calc(100% / var(--rows))`,
-          backgroundImage: 'url(data:image/svg+xml;base64,PCEtLSBSZXBsYWNlIHRoZSBjb250ZW50cyBvZiB0aGlzIGVkaXRvciB3aXRoIHlvdXIgU1ZHIGNvZGUgLS0+Cgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZC1jZWxsIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkMGQwZDAiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkLWNlbGwpIi8+PC9zdmc+)',
-          height: '100%',
-          width: '100%',
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          boxShadow: '0px 0px 2px 1px #d1d1d1;'
-        }
-      })
-
-      return clsx({[gridLayoutStyles]: showGridLines }, className)
-    },
+    () => clsx({[gridLayoutStyles]: showGridLines }, className),
     [className, showGridLines]
   )
 

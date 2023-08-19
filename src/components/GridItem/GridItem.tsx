@@ -12,7 +12,6 @@ import { DraggableCore, DraggableData, DraggableEvent } from 'react-draggable'
 import 'react-resizable/css/styles.css'
 import { Resizable } from 'react-resizable'
 
-import { css } from '../../../styled-system/css'
 import clsx from 'clsx'
 
 import {
@@ -39,6 +38,13 @@ import {
   getClientPosition,
 } from '../../helpers/utils'
 import { usePrevious } from '../../hooks/use-previous'
+import {
+  gridItemDraggableStyles,
+  gridItemDraggingStyles,
+  gridItemDroppingStyles,
+  gridItemResizingStyles,
+  gridItemStaticStyles,
+} from './GridItem.css'
 
 type GridItemCallback<T extends GridDragEvent | GridResizeEvent> = (
   i: LayoutItemID,
@@ -616,60 +622,41 @@ function GridItem(props: Props) {
     ]
   )
 
-  let newChild = useMemo(() => {
-    const gridItemStaticStyles = css({
-      cursor: 'auto',
-      userSelect: 'none',
-    })
-
-    const gridItemDraggableStyles = css({
-      cursor: 'move',
-    })
-
-    const gridItemResizingStyles = css({
-      opacity: 0.7,
-    })
-
-    const gridItemDraggingStyles = css({
-      zIndex: 1,
-    })
-
-    const gridItemDroppingStyles = css({
-      visibility: 'hidden',
-    })
-
-    return React.cloneElement(child, {
-      ref: elementRef,
-      className: clsx(
-        {
-          [gridItemStaticStyles]: props.static,
-          [gridItemDraggableStyles]: isDraggable,
-          [gridItemResizingStyles]: Boolean(resizing),
-          [gridItemDraggingStyles]: Boolean(dragging),
-          [gridItemDroppingStyles]: Boolean(droppingPosition),
+  let newChild = useMemo(
+    () =>
+      React.cloneElement(child, {
+        ref: elementRef,
+        className: clsx(
+          {
+            [gridItemStaticStyles]: props.static,
+            [gridItemDraggableStyles]: isDraggable,
+            [gridItemResizingStyles]: Boolean(resizing),
+            [gridItemDraggingStyles]: Boolean(dragging),
+            [gridItemDroppingStyles]: Boolean(droppingPosition),
+          },
+          child.props.className,
+          className
+        ),
+        // We can set the width and height on the child, but unfortunately we can't set the position.
+        style: {
+          ...style,
+          ...child.props.style,
+          ...createStyle(pos),
         },
-        child.props.className,
-        className
-      ),
-      // We can set the width and height on the child, but unfortunately we can't set the position.
-      style: {
-        ...style,
-        ...child.props.style,
-        ...createStyle(pos),
-      },
-    })
-  }, [
-    child,
-    className,
-    createStyle,
-    dragging,
-    droppingPosition,
-    isDraggable,
-    pos,
-    props.static,
-    resizing,
-    style,
-  ])
+      }),
+    [
+      child,
+      className,
+      createStyle,
+      dragging,
+      droppingPosition,
+      isDraggable,
+      pos,
+      props.static,
+      resizing,
+      style,
+    ]
+  )
 
   newChild = useMemo(
     () => (isResizable ? mixinResizable(newChild, pos) : newChild),

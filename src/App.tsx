@@ -7,8 +7,6 @@ import { DataType, testLayout } from './data'
 import { DroppingItem, Layout } from './helpers/utils'
 import { getOffset } from './helpers/calculateUtils'
 
-import './index.css'
-
 function App() {
   const [state, setState] = useState({
     className: 'layout',
