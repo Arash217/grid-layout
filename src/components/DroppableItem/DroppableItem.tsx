@@ -104,7 +104,7 @@ function DroppableItem(props: Props) {
     const { clientX, clientY } = getClientPosition(e)
 
     /* 
-      There isn't a generic event for both mouse and touch event, 
+      There isn't a generic event for both mouse and touch events, 
       so we used the DragEvent here. (which is technically still a mouse event)
     */
     const event = new DragEvent('drop', {
