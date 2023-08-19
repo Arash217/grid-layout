@@ -35,7 +35,7 @@ import { ResizeHandle, ResizeHandleAxis } from '../GridItem/GridItem'
 import { PositionParams, calcXY } from '../../helpers/calculateUtils'
 
 import clsx from 'clsx'
-import { gridLayoutStyles } from './GridLayout.css'
+import * as styles from './GridLayout.css'
 
 export type Props = {
   children: ReactElement | ReactElement[]
@@ -760,7 +760,7 @@ function GridLayout(props: Props) {
   }, [width, height, cols, rows, style])
 
   const mergedClassName = useMemo(
-    () => clsx({[gridLayoutStyles]: showGridLines }, className),
+    () => clsx({[styles.gridLayout]: showGridLines }, className),
     [className, showGridLines]
   )
 

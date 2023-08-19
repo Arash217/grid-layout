@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-export const gridLayoutStyles = style({
+export const gridLayout = style({
   position: 'relative',
   ':before': {
     content: '',

@@ -1,5 +1,5 @@
 import { style } from '@vanilla-extract/css'
 
-export const droppableItemStyles = style({
+export const droppableItem = style({
   cursor: 'grab',
 })

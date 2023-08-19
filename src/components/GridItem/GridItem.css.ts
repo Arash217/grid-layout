@@ -1,22 +1,22 @@
 import { style } from '@vanilla-extract/css'
 
-export const gridItemStaticStyles = style({
+export const staticStyle = style({
   cursor: 'auto',
   userSelect: 'none',
 })
 
-export const gridItemDraggableStyles = style({
+export const draggable = style({
   cursor: 'move',
 })
 
-export const gridItemResizingStyles = style({
+export const resizing = style({
   opacity: 0.7,
 })
 
-export const gridItemDraggingStyles = style({
+export const dragging = style({
   zIndex: 1,
 })
 
-export const gridItemDroppingStyles = style({
+export const dropping = style({
   visibility: 'hidden',
 })

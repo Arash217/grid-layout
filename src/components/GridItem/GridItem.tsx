@@ -38,13 +38,8 @@ import {
   getClientPosition,
 } from '../../helpers/utils'
 import { usePrevious } from '../../hooks/use-previous'
-import {
-  gridItemDraggableStyles,
-  gridItemDraggingStyles,
-  gridItemDroppingStyles,
-  gridItemResizingStyles,
-  gridItemStaticStyles,
-} from './GridItem.css'
+
+import * as styles from './GridItem.css'
 
 type GridItemCallback<T extends GridDragEvent | GridResizeEvent> = (
   i: LayoutItemID,
@@ -628,11 +623,11 @@ function GridItem(props: Props) {
         ref: elementRef,
         className: clsx(
           {
-            [gridItemStaticStyles]: props.static,
-            [gridItemDraggableStyles]: isDraggable,
-            [gridItemResizingStyles]: Boolean(resizing),
-            [gridItemDraggingStyles]: Boolean(dragging),
-            [gridItemDroppingStyles]: Boolean(droppingPosition),
+            [styles.staticStyle]: props.static,
+            [styles.draggable]: isDraggable,
+            [styles.resizing]: Boolean(resizing),
+            [styles.dragging]: Boolean(dragging),
+            [styles.dropping]: Boolean(droppingPosition),
           },
           child.props.className,
           className
