@@ -142,7 +142,6 @@ function GridLayout(props: Props) {
     setLayout(initialLayout)
   }, [initialLayout])
 
-
   const onDragStart = useCallback(
     (i: LayoutItemID, _x: number, _y: number, { e, node }: GridDragEvent) => {
       const l = getLayoutItem(layout, i)
@@ -439,8 +438,10 @@ function GridLayout(props: Props) {
       const gridRect = gridLayout.getBoundingClientRect()
       const isMouseInGrid = mouseInGrid(mouseXY, gridLayout)
 
-      const top = (mouseXY.y - droppingItem!.offsetTop - gridRect.top) / transformScale
-      const left = (mouseXY.x - droppingItem!.offsetLeft - gridRect.left) / transformScale
+      const top =
+        (mouseXY.y - droppingItem!.offsetTop - gridRect.top) / transformScale
+      const left =
+        (mouseXY.x - droppingItem!.offsetLeft - gridRect.left) / transformScale
 
       const newDroppingPosition = {
         top,
@@ -512,6 +513,7 @@ function GridLayout(props: Props) {
       margin,
       removeDroppingPlaceholder,
       rows,
+      transformScale,
       width,
     ]
   )
@@ -595,8 +597,7 @@ function GridLayout(props: Props) {
 
   useEffect(() => {
     document.addEventListener('dragover', onDragOver)
-    return () =>
-      document.removeEventListener('dragover', onDragOver)
+    return () => document.removeEventListener('dragover', onDragOver)
   }, [onDragOver])
 
   useEffect(() => {
@@ -760,7 +761,7 @@ function GridLayout(props: Props) {
   }, [width, height, cols, rows, style])
 
   const mergedClassName = useMemo(
-    () => clsx({[styles.gridLayout]: showGridLines }, className),
+    () => clsx({ [styles.gridLayout]: showGridLines }, className),
     [className, showGridLines]
   )
 

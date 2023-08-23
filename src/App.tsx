@@ -20,7 +20,7 @@ function App() {
     isResizable: true,
     compactType: null,
     isDroppable: true,
-    transformScale: 0.75,
+    transformScale: 1.5,
   })
 
   const [layout, setLayout] = useState(testLayout)
