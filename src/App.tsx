@@ -136,11 +136,12 @@ function App() {
       >
         {availableWidgets}
       </div>
-      <div>
+      <div
+        style={{
+          transform: 'scale(0.75)',
+        }}
+      >
         <GridLayout
-          style={{
-            transform: 'scale(0.75)',
-          }}
           isBounded={isBounded}
           layout={layout}
           droppingItem={droppingItem}
@@ -149,13 +150,6 @@ function App() {
         >
           {generatedDOM}
         </GridLayout>
-      </div>
-      <div
-        style={{
-          transform: 'scale(0.75)',
-          background: 'lightgray'
-        }}
-      >
       </div>
     </div>
   )

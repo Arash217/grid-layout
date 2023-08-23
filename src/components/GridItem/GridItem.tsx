@@ -246,8 +246,9 @@ function GridItem(props: Props) {
       const { clientY, clientX } = getClientPosition(e)
       const gridRect = gridLayoutRef.current!.getBoundingClientRect()
 
-      const top = clientY! - offsetTop - gridRect.top
-      const left = clientX! - offsetLeft - gridRect.left
+      const top = (clientY! - offsetTop - gridRect.top) / transformScale
+
+      const left = (clientX! - offsetLeft - gridRect.left) / transformScale
 
       const newPosition = {
         left,
@@ -292,6 +293,7 @@ function GridItem(props: Props) {
       margin,
       props,
       rows,
+      transformScale,
     ]
   )
 
@@ -307,8 +309,12 @@ function GridItem(props: Props) {
       const client = getClientPosition(e)
       const gridRect = gridLayoutRef.current!.getBoundingClientRect()
 
-      let top = client.clientY! - offset.current!.top - gridRect.top
-      let left = client.clientX! - offset.current!.left - gridRect.left
+      let top =
+        (client.clientY! - offset.current!.top - gridRect.top) / transformScale
+
+      let left =
+        (client.clientX! - offset.current!.left - gridRect.left) /
+        transformScale
 
       const { isBounded, i, w, h, containerWidth } = props
       const positionParams = {
@@ -360,6 +366,7 @@ function GridItem(props: Props) {
       margin,
       props,
       rows,
+      transformScale,
     ]
   )
 
