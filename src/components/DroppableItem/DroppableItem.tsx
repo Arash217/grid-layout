@@ -6,22 +6,23 @@ import {
   getClientPosition,
   getTranslatePosition,
 } from '../../helpers/utils'
-import { getOffset, getRelativePosition } from '../../helpers/calculateUtils'
 
 import clsx from 'clsx'
 import * as styles from './DroppableItem.css'
+import { getOffset } from '../../helpers/calculateUtils'
 
 export type Props = {
   children: ReactElement | ReactElement[]
   className?: string
   container: HTMLElement
+  transformScale?: number
   onDropStart?: DroppableEventCallback
   onDropDragOver?: DroppableEventCallback
   onDrop?: DroppableEventCallback
 }
 
 function DroppableItem(props: Props) {
-  const { className, children } = props
+  const { className, children, transformScale = 1 } = props
 
   const child = useMemo(() => React.Children.only(children), [children])
   const itemRef = React.useRef(null)
@@ -34,15 +35,24 @@ function DroppableItem(props: Props) {
     [child.props.className, className]
   )
 
+  const newChild = React.cloneElement(child, {
+    style: {
+      // transform: `scale(${transformScale})`,
+    },
+  })
+
   function onStart(e: DraggableEvent, data: DraggableData) {
     const { left: offsetLeft, top: offsetTop } = getOffset(e, data.node)
+    const { clientX, clientY } = getClientPosition(e)
 
     droppableItemOffset.current = {
       left: offsetLeft,
       top: offsetTop,
     }
 
-    const { left, top } = getRelativePosition(data.node)
+    const left = clientX! - offsetLeft
+    const top = clientY! - offsetTop
+
     const position = getTranslatePosition(left, top)
 
     setDroppableItem(
@@ -50,14 +60,16 @@ function DroppableItem(props: Props) {
         ref={droppableItemRef}
         className={mergedClassName}
         style={{
+          display: 'flex',
           opacity: 0.7,
           position: 'absolute',
           top: 0,
           left: 0,
-          transform: position,
+          transform: `${position} scale(${transformScale})`,
+          transformOrigin: '0 0',
         }}
       >
-        {child}
+        {newChild}
       </div>
     )
 
@@ -78,7 +90,7 @@ function DroppableItem(props: Props) {
       ref: droppableItemRef,
       style: {
         ...droppableItem!.props.style,
-        transform: position,
+        transform: `${position} scale(${transformScale})`,
       },
     })
 
@@ -124,6 +136,7 @@ function DroppableItem(props: Props) {
         onDrag={onDrag}
         onStop={onStop}
         nodeRef={itemRef}
+        scale={transformScale}
       >
         <div ref={itemRef} className={mergedClassName}>
           {child}

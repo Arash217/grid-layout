@@ -57,6 +57,7 @@ function App() {
       <DroppableItem
         key={item.i}
         container={document.body}
+        transformScale={state.transformScale}
         onDropStart={(e, data) => {
           const { left, top } = getOffset(e, data.node)
 
@@ -86,7 +87,7 @@ function App() {
         </FlexibleItem>
       </DroppableItem>
     ))
-  }, [columnWidth, rowHeight])
+  }, [columnWidth, rowHeight, state.transformScale])
 
   const availableWidgets = useMemo(
     () => generateAvailableWidgets(),
@@ -128,19 +129,18 @@ function App() {
         />
         <label htmlFor="showGridLines">showGridLines</label>
       </div>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        {availableWidgets}
-      </div>
-      <div
-        style={{
-          transform: 'scale(0.75)',
-        }}
-      >
+      <div style={{
+        transform: `scale(${state.transformScale})`,
+        transformOrigin: '0 0'
+      }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+          }}
+        >
+          {availableWidgets}
+        </div>
         <GridLayout
           isBounded={isBounded}
           layout={layout}

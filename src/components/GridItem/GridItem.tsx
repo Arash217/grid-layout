@@ -247,7 +247,6 @@ function GridItem(props: Props) {
       const gridRect = gridLayoutRef.current!.getBoundingClientRect()
 
       const top = (clientY! - offsetTop - gridRect.top) / transformScale
-
       const left = (clientX! - offsetLeft - gridRect.left) / transformScale
 
       const newPosition = {
@@ -306,15 +305,13 @@ function GridItem(props: Props) {
         throw new Error('onDrag called before onDragStart.')
       }
 
-      const client = getClientPosition(e)
+      const { clientX, clientY } = getClientPosition(e)
       const gridRect = gridLayoutRef.current!.getBoundingClientRect()
 
-      let top =
-        (client.clientY! - offset.current!.top - gridRect.top) / transformScale
+      let top = (clientY! - offset.current!.top - gridRect.top) / transformScale
 
       let left =
-        (client.clientX! - offset.current!.left - gridRect.left) /
-        transformScale
+        (clientX! - offset.current!.left - gridRect.left) / transformScale
 
       const { isBounded, i, w, h, containerWidth } = props
       const positionParams = {

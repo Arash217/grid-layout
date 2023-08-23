@@ -2,6 +2,7 @@ import React, { CSSProperties, ReactElement, useMemo } from 'react'
 
 export type Props = {
   children: ReactElement | ReactElement[]
+  style?: CSSProperties
   columnWidth: number
   rowHeight: number
   width: number
@@ -21,6 +22,7 @@ export const FlexibleItem = (props: Props) => {
   return React.cloneElement(child, {
     style: {
       ...child.props.style,
+      ...props.style,
       ...style
     }
   })
