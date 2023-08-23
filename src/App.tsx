@@ -20,6 +20,7 @@ function App() {
     isResizable: true,
     compactType: null,
     isDroppable: true,
+    transformScale: 0.75,
   })
 
   const [layout, setLayout] = useState(testLayout)
@@ -135,15 +136,27 @@ function App() {
       >
         {availableWidgets}
       </div>
-      <GridLayout
-        isBounded={isBounded}
-        layout={layout}
-        droppingItem={droppingItem}
-        onDrop={handleDrop}
-        {...state}
+      <div>
+        <GridLayout
+          style={{
+            transform: 'scale(0.75)',
+          }}
+          isBounded={isBounded}
+          layout={layout}
+          droppingItem={droppingItem}
+          onDrop={handleDrop}
+          {...state}
+        >
+          {generatedDOM}
+        </GridLayout>
+      </div>
+      <div
+        style={{
+          transform: 'scale(0.75)',
+          background: 'lightgray'
+        }}
       >
-        {generatedDOM}
-      </GridLayout>
+      </div>
     </div>
   )
 }

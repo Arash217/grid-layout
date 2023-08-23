@@ -61,8 +61,8 @@ export function calcGridItemPosition(
 
   // If resizing, use the exact width and height as returned from resizing callbacks.
   if (state && state.resizing) {
-    out.width = Math.round(state.resizing.width)
-    out.height = Math.round(state.resizing.height)
+    out.width = state.resizing.width
+    out.height = state.resizing.height
   }
   // Otherwise, calculate from grid units.
   else {
@@ -72,8 +72,8 @@ export function calcGridItemPosition(
 
   // If dragging, use the exact width and height as returned from dragging callbacks.
   if (state && state.dragging) {
-    out.top = Math.round(state.dragging.top)
-    out.left = Math.round(state.dragging.left)
+    out.top = state.dragging.top
+    out.left = state.dragging.left
   }
   // Otherwise, calculate from grid units.
   else {
