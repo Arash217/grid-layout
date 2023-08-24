@@ -754,8 +754,8 @@ function GridLayout(props: Props) {
       maxWidth: width,
       minHeight: height,
       maxHeight: height,
-      '--cols': cols,
-      '--rows': rows,
+      '--col-width': `${width / cols}px`,
+      '--row-height': `${height / rows}px`,
       ...style,
     }
   }, [width, height, cols, rows, style])
