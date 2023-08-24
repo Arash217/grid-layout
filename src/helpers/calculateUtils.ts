@@ -34,7 +34,7 @@ export function calcGridItemWHPx(
   // 0 * Infinity === NaN, which causes problems with resize contraints
   if (!Number.isFinite(gridUnits)) return gridUnits
 
-  return (
+  return Math.round(
     colOrRowSize * gridUnits + Math.max(0, gridUnits - 1) * marginPx
   )
 }
