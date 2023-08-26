@@ -25,8 +25,8 @@ function DroppableItem(props: Props) {
   const { className, children, transformScale = 1 } = props
 
   const child = useMemo(() => React.Children.only(children), [children])
-  const itemRef = React.useRef(null)
-  const droppableItemRef = useRef(null)
+  const droppableItemRef = React.useRef(null)
+  const droppingItemRef = useRef(null)
   const [droppableItem, setDroppableItem] = useState<ReactElement | null>(null)
   const droppableItemOffset = useRef<{ left: number; top: number } | null>(null)
 
@@ -35,11 +35,10 @@ function DroppableItem(props: Props) {
     [child.props.className, className]
   )
 
-  const newChild = React.cloneElement(child, {
-    style: {
-      // transform: `scale(${transformScale})`,
-    },
-  })
+  const droppingItemMergedClassName = useMemo(
+    () => clsx(mergedClassName, styles.droppingItem),
+    [mergedClassName]
+  )
 
   function onStart(e: DraggableEvent, data: DraggableData) {
     const { left: offsetLeft, top: offsetTop } = getOffset(e, data.node)
@@ -57,19 +56,13 @@ function DroppableItem(props: Props) {
 
     setDroppableItem(
       <div
-        ref={droppableItemRef}
-        className={mergedClassName}
+        ref={droppingItemRef}
+        className={droppingItemMergedClassName}
         style={{
-          display: 'flex',
-          opacity: 0.7,
-          position: 'absolute',
-          top: 0,
-          left: 0,
           transform: `${position} scale(${transformScale})`,
-          transformOrigin: '0 0',
         }}
       >
-        {newChild}
+        {child}
       </div>
     )
 
@@ -87,7 +80,7 @@ function DroppableItem(props: Props) {
     const position = getTranslatePosition(left, top)
 
     const newChild = React.cloneElement(droppableItem!, {
-      ref: droppableItemRef,
+      ref: droppingItemRef,
       style: {
         ...droppableItem!.props.style,
         transform: `${position} scale(${transformScale})`,
@@ -135,10 +128,10 @@ function DroppableItem(props: Props) {
         onStart={onStart}
         onDrag={onDrag}
         onStop={onStop}
-        nodeRef={itemRef}
+        nodeRef={droppableItemRef}
         scale={transformScale}
       >
-        <div ref={itemRef} className={mergedClassName}>
+        <div ref={droppableItemRef} className={mergedClassName}>
           {child}
         </div>
       </DraggableCore>

@@ -57,6 +57,7 @@ export type Props = {
   isDroppable?: boolean
   isBounded?: boolean
   transformScale?: number
+  itemScale?: number
   allowOverlap?: boolean
   preventCollision?: boolean
   verticalCompact?: boolean
@@ -102,6 +103,7 @@ function GridLayout(props: Props) {
     isResizable = false,
     isBounded = false,
     transformScale = 1,
+    itemScale = 1,
     allowOverlap = false,
     preventCollision = true,
     verticalCompact = true,
@@ -633,22 +635,13 @@ function GridLayout(props: Props) {
         isBounded={false}
         useCSSTransforms={useCSSTransforms}
         transformScale={transformScale}
+        itemScale={itemScale}
         gridLayoutRef={gridLayoutRef}
       >
         <div />
       </GridItem>
     )
-  }, [
-    activeDrag,
-    cols,
-    containerPadding,
-    height,
-    margin,
-    rows,
-    transformScale,
-    useCSSTransforms,
-    width,
-  ])
+  }, [activeDrag, cols, containerPadding, height, itemScale, margin, rows, transformScale, useCSSTransforms, width])
 
   const processGridItem = useCallback(
     (child: ReactElement, isDroppingItem?: boolean) => {
@@ -684,6 +677,7 @@ function GridLayout(props: Props) {
           containerPadding={containerPadding}
           useCSSTransforms={useCSSTransforms}
           transformScale={transformScale}
+          itemScale={itemScale}
           w={l.w}
           h={l.h}
           x={l.x}
@@ -712,29 +706,7 @@ function GridLayout(props: Props) {
         </GridItem>
       )
     },
-    [
-      cols,
-      containerPadding,
-      droppingPosition,
-      height,
-      isBounded,
-      isDraggable,
-      isResizable,
-      layout,
-      margin,
-      onDrag,
-      onDragStart,
-      onDragStop,
-      onResize,
-      onResizeStart,
-      onResizeStop,
-      resizeHandle,
-      resizeHandles,
-      rows,
-      transformScale,
-      useCSSTransforms,
-      width,
-    ]
+    [cols, containerPadding, droppingPosition, height, isBounded, isDraggable, isResizable, itemScale, layout, margin, onDrag, onDragStart, onDragStop, onResize, onResizeStart, onResizeStop, resizeHandle, resizeHandles, rows, transformScale, useCSSTransforms, width]
   )
 
   const gridItems = useMemo(

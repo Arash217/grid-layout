@@ -20,6 +20,7 @@ export const FlexibleItem = (props: Props) => {
   }
 
   return React.cloneElement(child, {
+    className: child.props.className,
     style: {
       ...child.props.style,
       ...props.style,

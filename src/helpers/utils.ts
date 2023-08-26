@@ -457,19 +457,22 @@ export function getTranslatePosition(left: number, top: number) {
   return `translate3d(${left}px, ${top}px, 0)`
 }
 
-export function setTransform({ top, left, width, height }: Position) {
+export function setTransform({ top, left, width, height }: Position, scale: number) {
   const translate = getTranslatePosition(left, top)
 
   return {
-    transform: translate,
+    transform: `${translate} scale(${scale})`,
+    transformOrigin: '0 0',
     width: `${width}px`,
     height: `${height}px`,
     position: 'absolute',
   }
 }
 
-export function setTopLeft({ top, left, width, height }: Position) {
+export function setTopLeft({ top, left, width, height }: Position, scale: number) {
   return {
+    transform: `scale(${scale})`,
+    transformOrigin: '0 0',
     top: `${top}px`,
     left: `${left}px`,
     width: `${width}px`,

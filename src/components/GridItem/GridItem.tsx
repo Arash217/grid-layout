@@ -75,6 +75,7 @@ export type Props = {
   useCSSTransforms?: boolean
   usePercentages?: boolean
   transformScale: number
+  itemScale: number
   droppingPosition?: DroppingPosition
   gridLayoutRef: MutableRefObject<HTMLDivElement | null>
 
@@ -140,6 +141,7 @@ function GridItem(props: Props) {
     isResizable,
     droppingPosition,
     transformScale,
+    itemScale,
     resizeHandles,
     resizeHandle,
     gridLayoutRef,
@@ -199,14 +201,14 @@ function GridItem(props: Props) {
   } | null>(null)
 
   const createStyle = useCallback(
-    function (pos: Position): { [key: string]: string } {
+    function (pos: Position, scale: number): { [key: string]: string } {
       let style
       // CSS Transforms support (default)
       if (useCSSTransforms) {
-        style = setTransform(pos)
+        style = setTransform(pos, scale)
       } else {
         // top,left (slow)
-        style = setTopLeft(pos)
+        style = setTopLeft(pos, scale)
 
         // This is used for server rendering.
         if (usePercentages) {
@@ -640,7 +642,7 @@ function GridItem(props: Props) {
         style: {
           ...style,
           ...child.props.style,
-          ...createStyle(pos),
+          ...createStyle(pos, itemScale),
         },
       }),
     [
@@ -650,6 +652,7 @@ function GridItem(props: Props) {
       dragging,
       droppingPosition,
       isDraggable,
+      itemScale,
       pos,
       props.static,
       resizing,

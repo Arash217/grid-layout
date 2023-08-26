@@ -1,26 +1,31 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
 import { FlexibleItem } from './components/FlexibleItem'
 import { DroppableItem } from './components/DroppableItem'
+import { ScalableItem } from './components/ScalableItem'
 import { DataType, testLayout } from './data'
 
 import { DroppingItem, Layout } from './helpers/utils'
 import { getOffset } from './helpers/calculateUtils'
+import { AnalogClock } from './components/AnalogClock'
 
 function App() {
+  const initialWidth = window.screen.width * 0.5
+  const initialHeight = window.screen.height * 0.5
+
   const [state, setState] = useState({
     className: 'layout',
     onLayoutChange: function () {},
     cols: 48,
     rows: 32,
-    width: window.screen.width * 0.5,
-    height: window.screen.height * 0.5,
+    width: initialWidth,
+    height: initialHeight,
     showGridLines: true,
     isDraggable: true,
     isResizable: true,
     compactType: null,
     isDroppable: true,
-    transformScale: 1.5,
+    itemScale: 1,
   })
 
   const [layout, setLayout] = useState(testLayout)
@@ -37,6 +42,14 @@ function App() {
   const columnWidth = state.width / state.cols
   const rowHeight = state.height / state.rows
 
+  useLayoutEffect(() => {
+    setState((state) => ({
+      ...state,
+      width: initialWidth * state.itemScale,
+      height: initialHeight * state.itemScale,
+    }))
+  }, [initialHeight, initialWidth, state.itemScale])
+
   const generateDom = useCallback(() => {
     return layout.map((item) => {
       return (
@@ -46,18 +59,19 @@ function App() {
             background: 'red',
           }}
         >
-          <span className="text">{item.i}</span>
+          <ScalableItem itemScale={state.itemScale}>
+            <AnalogClock />
+          </ScalableItem>
         </div>
       )
     })
-  }, [layout])
+  }, [layout, state.itemScale])
 
   const generateAvailableWidgets = useCallback(() => {
     return testLayout.map((item) => (
       <DroppableItem
         key={item.i}
         container={document.body}
-        transformScale={state.transformScale}
         onDropStart={(e, data) => {
           const { left, top } = getOffset(e, data.node)
 
@@ -77,17 +91,19 @@ function App() {
           width={item.w}
           height={item.h}
         >
-          <div
-            style={{
-              backgroundColor: 'pink',
-            }}
-          >
-            Droppable Element (Drag me!)
-          </div>
+          <ScalableItem itemScale={state.itemScale}>
+            <div
+              style={{
+                backgroundColor: 'pink',
+              }}
+            >
+              <div>Droppable Element (Drag me!)</div>
+            </div>
+          </ScalableItem>
         </FlexibleItem>
       </DroppableItem>
     ))
-  }, [columnWidth, rowHeight, state.transformScale])
+  }, [columnWidth, rowHeight, state.itemScale])
 
   const availableWidgets = useMemo(
     () => generateAvailableWidgets(),
@@ -128,11 +144,29 @@ function App() {
           }
         />
         <label htmlFor="showGridLines">showGridLines</label>
+
+        <button
+          onClick={() =>
+            setState((state) => ({
+              ...state,
+              itemScale: state.itemScale + 0.25,
+            }))
+          }
+        >
+          Zoom in
+        </button>
+        <button
+          onClick={() =>
+            setState((state) => ({
+              ...state,
+              itemScale: state.itemScale - 0.25,
+            }))
+          }
+        >
+          Zoom out
+        </button>
       </div>
-      <div style={{
-        transform: `scale(${state.transformScale})`,
-        transformOrigin: '0 0'
-      }}>
+      <div>
         <div
           style={{
             display: 'flex',
@@ -147,6 +181,7 @@ function App() {
           droppingItem={droppingItem}
           onDrop={handleDrop}
           {...state}
+          itemScale={1}
         >
           {generatedDOM}
         </GridLayout>
