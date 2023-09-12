@@ -18,7 +18,7 @@ export const testLayout = [
     i: crypto.randomUUID(),
   },
   {
-    x: 20,
+    x: 0,
     y: 0,
     w: 8,
     h: 6,

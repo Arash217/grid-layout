@@ -1,6 +1,6 @@
 import { CSSProperties, useEffect, useState } from 'react'
 
-import * as cssStyles from './DigitalClock.css'
+// import * as cssStyles from './DigitalClock.css'
 
 export function DigitalClock() {
   const [time, setTime] = useState(getTime)
@@ -63,7 +63,7 @@ export function DigitalClock() {
   return (
     <div style={mergedStyles}>
       <span>{time}</span>
-      <div className={cssStyles.digitalClock}></div>
+      {/* <div className={cssStyles.digitalClock}></div> */}
     </div>
   )
 }

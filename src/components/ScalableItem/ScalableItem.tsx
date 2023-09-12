@@ -1,4 +1,4 @@
-import { CSSProperties, ReactElement, useMemo } from 'react'
+import { CSSProperties, ReactElement, useMemo, useRef } from 'react'
 
 import * as styles from './ScalableItem.css'
 import React from 'react'
@@ -15,19 +15,23 @@ export function ScalableItem(props: Props) {
 
   const child = useMemo(() => React.Children.only(children), [children])
 
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const scalableItemRef = useRef<HTMLDivElement | null>(null)
+
   const mergedClassName = useMemo(
     () => clsx(child.props.className, styles.scalableItem),
     [child.props.className]
   )
 
   return (
-    <div className={styles.container} style={{ ...style }}>
+    <div className={styles.container} style={{ ...style }} ref={containerRef}>
       <div
         className={mergedClassName}
+        ref={scalableItemRef}
         style={{
           transform: `scale(${itemScale})`,
-          width: `calc(100cqw / ${itemScale})`,
-          height: `calc(100cqh / ${itemScale})`,
+          width: `calc(100% / ${itemScale})`,
+          height: `calc(100% / ${itemScale})`,
         }}
       >
         {child}

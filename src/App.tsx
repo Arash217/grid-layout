@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { GridLayout } from './components/GridLayout'
 import { FlexibleItem } from './components/FlexibleItem'
 import { DroppableItem } from './components/DroppableItem'
@@ -7,11 +7,11 @@ import { DataType, testLayout } from './data'
 
 import { DroppingItem, Layout } from './helpers/utils'
 import { getOffset } from './helpers/calculateUtils'
-import { AnalogClock } from './components/AnalogClock'
+import { DigitalClock } from './components/DigitalClock'
 
 function App() {
-  const initialWidth = window.screen.width * 0.5
-  const initialHeight = window.screen.height * 0.5
+  const initialWidth = window.screen.width * 0.75
+  const initialHeight = window.screen.height * 0.75
 
   const [state, setState] = useState({
     className: 'layout',
@@ -28,7 +28,7 @@ function App() {
     itemScale: 1,
   })
 
-  const [layout, setLayout] = useState(testLayout)
+  const [layout, setLayout] = useState<DataType>([])
   const [droppingItem, setDroppingItem] = useState<DroppingItem | undefined>()
   const [isBounded, setIsBounded] = useState(false)
 
@@ -42,25 +42,22 @@ function App() {
   const columnWidth = state.width / state.cols
   const rowHeight = state.height / state.rows
 
-  useLayoutEffect(() => {
-    setState((state) => ({
-      ...state,
-      width: initialWidth * state.itemScale,
-      height: initialHeight * state.itemScale,
-    }))
-  }, [initialHeight, initialWidth, state.itemScale])
-
   const generateDom = useCallback(() => {
     return layout.map((item) => {
       return (
         <div
           key={item.i}
-          style={{
-            background: 'red',
-          }}
         >
-          <ScalableItem itemScale={state.itemScale}>
-            <AnalogClock />
+          <ScalableItem
+            itemScale={state.itemScale}
+          >
+            <div
+              style={{
+                backgroundColor: 'rgba(167, 0, 0, 0.5)',
+              }}
+            >
+              <DigitalClock />
+            </div>
           </ScalableItem>
         </div>
       )
@@ -91,7 +88,9 @@ function App() {
           width={item.w}
           height={item.h}
         >
-          <ScalableItem itemScale={state.itemScale}>
+          <ScalableItem
+            itemScale={state.itemScale}
+          >
             <div
               style={{
                 backgroundColor: 'pink',
@@ -147,20 +146,30 @@ function App() {
 
         <button
           onClick={() =>
-            setState((state) => ({
-              ...state,
-              itemScale: state.itemScale + 0.25,
-            }))
+            setState((state) => {
+              const newItemScale = state.itemScale + 0.25
+              return {
+                ...state,
+                itemScale: newItemScale,
+                width: initialWidth * newItemScale,
+                height: initialHeight * newItemScale,
+              }
+            })
           }
         >
           Zoom in
         </button>
         <button
           onClick={() =>
-            setState((state) => ({
-              ...state,
-              itemScale: state.itemScale - 0.25,
-            }))
+            setState((state) => {
+              const newItemScale = state.itemScale - 0.25
+              return {
+                ...state,
+                itemScale: newItemScale,
+                width: initialWidth * newItemScale,
+                height: initialHeight * newItemScale,
+              }
+            })
           }
         >
           Zoom out

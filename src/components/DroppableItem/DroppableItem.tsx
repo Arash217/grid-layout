@@ -25,7 +25,7 @@ function DroppableItem(props: Props) {
   const { className, children, transformScale = 1 } = props
 
   const child = useMemo(() => React.Children.only(children), [children])
-  const droppableItemRef = React.useRef(null)
+  const droppableItemRef = useRef(null)
   const droppingItemRef = useRef(null)
   const [droppableItem, setDroppableItem] = useState<ReactElement | null>(null)
   const droppableItemOffset = useRef<{ left: number; top: number } | null>(null)
@@ -49,8 +49,9 @@ function DroppableItem(props: Props) {
       top: offsetTop,
     }
 
-    const left = clientX! - offsetLeft
-    const top = clientY! - offsetTop
+    /* TODO: refactor into a util function */
+    const left = clientX! - offsetLeft + window.scrollX
+    const top = clientY! - offsetTop + window.scrollY
 
     const position = getTranslatePosition(left, top)
 
@@ -74,15 +75,14 @@ function DroppableItem(props: Props) {
 
     const { clientX, clientY } = getClientPosition(e)
 
+    /* TODO: refactor into a util function */
     const left = clientX! - offsetLeft + window.scrollX
     const top = clientY! - offsetTop + window.scrollY
 
     const position = getTranslatePosition(left, top)
 
     const newChild = React.cloneElement(droppableItem!, {
-      ref: droppingItemRef,
       style: {
-        ...droppableItem!.props.style,
         transform: `${position} scale(${transformScale})`,
       },
     })
